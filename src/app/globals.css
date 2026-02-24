@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0d1117;
+  --card: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --green: #50fa7b;
+  --red: #ff5555;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* Override RainbowKit modal z-index */
+[data-rk] {
+  --rk-radii-modal: 12px;
+}
