@@ -14,6 +14,7 @@ import AccountPanel from "@/components/AccountPanel";
 import { useBuilderApproval } from "@/hooks/useBuilderApproval";
 import { useAgentWallet } from "@/hooks/useAgentWallet";
 import { DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
+import BuilderIncomeBar from "@/components/BuilderIncomeBar";
 
 function ConnectHero() {
   return (
@@ -83,7 +84,7 @@ export default function Home() {
   const canTrade = isBuilderApproved && isAgentApproved;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-10">
       <Header />
 
       {!isConnected ? (
@@ -124,6 +125,8 @@ export default function Home() {
           </footer>
         </main>
       )}
+
+      <BuilderIncomeBar />
     </div>
   );
 }

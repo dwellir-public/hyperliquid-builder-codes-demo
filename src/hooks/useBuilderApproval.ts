@@ -15,6 +15,6 @@ export function useBuilderApproval(builderAddress?: string) {
     queryKey: ["maxBuilderFee", network, address, builder],
     queryFn: () => queryMaxBuilderFee(network, address!, builder),
     enabled: !!address,
-    refetchInterval: 10_000,
+    refetchInterval: network === "mainnet" ? 5_000 : 10_000,
   });
 }

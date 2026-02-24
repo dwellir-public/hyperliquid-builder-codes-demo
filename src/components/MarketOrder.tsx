@@ -10,6 +10,7 @@ import {
   DWELLIR_BUILDER_ADDRESS,
   DEFAULT_BUILDER_FEE,
 } from "@/config/constants";
+import { useBBO } from "@/hooks/useDwellirL2Book";
 import StepCard from "./StepCard";
 import TransactionResult from "./TransactionResult";
 
@@ -37,8 +38,13 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
   const [confirming, setConfirming] = useState(false);
   const [result, setResult] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
+  const [closingCoin, setClosingCoin] = useState<string | null>(null);
+  const [closeResult, setCloseResult] = useState<unknown>(null);
+  const [closeError, setCloseError] = useState<string | null>(null);
 
-  const midPrice = mids?.[coin] ? parseFloat(mids[coin]) : null;
+  const bbo = useBBO(coin);
+  const polledMid = mids?.[coin] ? parseFloat(mids[coin]) : null;
+  const midPrice = bbo?.mid ?? polledMid;
   const assetIndex = meta?.universe.findIndex((a) => a.name === coin) ?? -1;
   const szDecimals = meta?.universe[assetIndex]?.szDecimals;
   const iocPrice = midPrice
@@ -94,6 +100,45 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClosePosition = async (posCoin: string, posSize: string, side: "Long" | "Short") => {
+    if (!agentWalletClient || !mids?.[posCoin]) return;
+    const posAssetIndex = meta?.universe.findIndex((a) => a.name === posCoin) ?? -1;
+    if (posAssetIndex < 0) return;
+
+    const posMid = parseFloat(mids[posCoin]);
+    // Closing a long = sell, closing a short = buy
+    const closeBuy = side === "Short";
+    const closePrice = closeBuy ? posMid * (1 + SLIPPAGE) : posMid * (1 - SLIPPAGE);
+
+    setClosingCoin(posCoin);
+    setCloseResult(null);
+    setCloseError(null);
+    try {
+      const res = await agentWalletClient.order({
+        orders: [
+          {
+            a: posAssetIndex,
+            b: closeBuy,
+            p: parseFloat(closePrice.toPrecision(5)).toString(),
+            s: posSize,
+            r: true,
+            t: { limit: { tif: "Ioc" } },
+          },
+        ],
+        grouping: "na",
+        builder: {
+          b: DWELLIR_BUILDER_ADDRESS,
+          f: DEFAULT_BUILDER_FEE,
+        },
+      });
+      setCloseResult(res);
+    } catch (err) {
+      setCloseError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setClosingCoin(null);
     }
   };
 
@@ -183,10 +228,25 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
           </div>
 
           {midPrice && (
-            <p className="text-xs text-hl-muted">
-              Mid: ${midPrice.toFixed(2)} | IOC limit:{" "}
-              ${iocPrice ? parseFloat(iocPrice.toPrecision(5)) : "—"} (3% slippage)
-            </p>
+            <div className="text-xs space-y-1 bg-hl-bg/50 border border-hl-border rounded-lg px-3 py-2">
+              <div className="flex items-center justify-between">
+                <span className="text-hl-muted">Dwellir L2 Orderbook</span>
+                <span className="text-[10px] text-hl-muted/50 font-mono">LIVE</span>
+              </div>
+              <div className="font-mono flex items-baseline gap-2">
+                <span className="text-hl-green">{bbo ? bbo.bestBid.toFixed(2) : "—"}</span>
+                <span className="text-hl-muted/40">/</span>
+                <span className="text-hl-red">{bbo ? bbo.bestAsk.toFixed(2) : "—"}</span>
+                <span className="text-hl-muted/50 text-[10px] ml-auto">BID / ASK</span>
+              </div>
+              <div className="font-mono flex items-baseline gap-2">
+                <span className="text-white">${midPrice.toFixed(2)}</span>
+                <span className="text-hl-muted/50 text-[10px]">MID</span>
+                <span className="text-hl-muted ml-auto">
+                  IOC: ${iocPrice ? parseFloat(iocPrice.toPrecision(5)) : "—"} (3% slippage)
+                </span>
+              </div>
+            </div>
           )}
 
           {!confirming ? (
@@ -230,6 +290,81 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
             liquidity. Use on testnet first.
           </p>
           <TransactionResult result={result} error={error} context="order" />
+
+          {/* Positions */}
+          <div className="border-t border-hl-border pt-3 mt-4">
+            <h4 className="text-xs font-medium text-hl-muted mb-2">
+              Positions
+            </h4>
+            {!account ? (
+              <p className="text-xs text-hl-muted">Loading...</p>
+            ) : account.positions.length === 0 ? (
+              <p className="text-xs text-hl-muted">No open positions.</p>
+            ) : (
+              <div className="border border-hl-border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-hl-bg text-hl-muted text-xs">
+                      <th className="text-left px-3 py-2">Coin</th>
+                      <th className="text-left px-3 py-2">Side</th>
+                      <th className="text-right px-3 py-2">Size</th>
+                      <th className="text-right px-3 py-2">Entry</th>
+                      <th className="text-right px-3 py-2">PnL</th>
+                      <th className="text-right px-3 py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {account.positions.map((pos) => {
+                      const pnl = parseFloat(pos.unrealizedPnl);
+                      return (
+                        <tr
+                          key={pos.coin}
+                          className="border-t border-hl-border hover:bg-hl-card/50"
+                        >
+                          <td className="px-3 py-2 font-medium">{pos.coin}</td>
+                          <td
+                            className={`px-3 py-2 ${
+                              pos.side === "Long"
+                                ? "text-hl-green"
+                                : "text-hl-red"
+                            }`}
+                          >
+                            {pos.side}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono">
+                            {pos.size}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono">
+                            ${parseFloat(pos.entryPx).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td
+                            className={`px-3 py-2 text-right font-mono ${
+                              pnl >= 0 ? "text-hl-green" : "text-hl-red"
+                            }`}
+                          >
+                            {pnl >= 0 ? "+" : ""}
+                            {pnl.toFixed(2)}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <button
+                              onClick={() => handleClosePosition(pos.coin, pos.size, pos.side)}
+                              disabled={closingCoin === pos.coin}
+                              className="px-2 py-1 text-xs font-medium rounded border border-hl-red/50 text-hl-red hover:bg-hl-red/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                              {closingCoin === pos.coin
+                                ? "Closing..."
+                                : "Close"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <TransactionResult result={closeResult} error={closeError} context="order" />
+          </div>
         </div>
       )}
     </StepCard>

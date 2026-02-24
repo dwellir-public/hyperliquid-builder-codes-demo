@@ -47,8 +47,8 @@ export async function queryMaxBuilderFee(
   user: string,
   builder: string
 ): Promise<number> {
-  const { apiUrl } = NETWORKS[network];
-  const resp = await fetch(`${apiUrl}/info`, {
+  const { infoUrl } = NETWORKS[network];
+  const resp = await fetch(infoUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -61,12 +61,12 @@ export async function queryMaxBuilderFee(
   return resp.json();
 }
 
-/** Fetch all mid prices. */
+/** Fetch all mid prices (uses public HL API — not available on Dwellir info). */
 export async function fetchAllMids(
   network: NetworkKey
 ): Promise<Record<string, string>> {
-  const { apiUrl } = NETWORKS[network];
-  const resp = await fetch(`${apiUrl}/info`, {
+  const { publicInfoUrl } = NETWORKS[network];
+  const resp = await fetch(publicInfoUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type: "allMids" }),
@@ -79,8 +79,8 @@ export async function fetchAllMids(
 export async function fetchMeta(
   network: NetworkKey
 ): Promise<{ universe: Array<{ name: string; szDecimals: number }> }> {
-  const { apiUrl } = NETWORKS[network];
-  const resp = await fetch(`${apiUrl}/info`, {
+  const { infoUrl } = NETWORKS[network];
+  const resp = await fetch(infoUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type: "meta" }),
@@ -105,8 +105,8 @@ export async function fetchClearinghouseState(
     };
   }>;
 }> {
-  const { apiUrl } = NETWORKS[network];
-  const resp = await fetch(`${apiUrl}/info`, {
+  const { infoUrl } = NETWORKS[network];
+  const resp = await fetch(infoUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type: "clearinghouseState", user }),
@@ -129,8 +129,8 @@ export async function fetchOpenOrders(
     timestamp: number;
   }>
 > {
-  const { apiUrl } = NETWORKS[network];
-  const resp = await fetch(`${apiUrl}/info`, {
+  const { infoUrl } = NETWORKS[network];
+  const resp = await fetch(infoUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type: "openOrders", user }),
@@ -139,7 +139,7 @@ export async function fetchOpenOrders(
   return resp.json();
 }
 
-/** Fetch user fills (trade history). */
+/** Fetch user fills (trade history — uses public HL API). */
 export async function fetchUserFills(
   network: NetworkKey,
   user: string
@@ -152,8 +152,8 @@ export async function fetchUserFills(
     time: number;
   }>
 > {
-  const { apiUrl } = NETWORKS[network];
-  const resp = await fetch(`${apiUrl}/info`, {
+  const { publicInfoUrl } = NETWORKS[network];
+  const resp = await fetch(publicInfoUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type: "userFills", user }),
@@ -162,7 +162,27 @@ export async function fetchUserFills(
   return resp.json();
 }
 
-/** Fetch candle snapshot for charting. */
+/** Fetch referral/builder data for a user (uses public HL API — not available on Dwellir info). */
+export async function fetchReferral(
+  network: NetworkKey,
+  user: string
+): Promise<{
+  cumVlm: string;
+  unclaimedRewards: string;
+  claimedRewards: string;
+  builderRewards: string;
+}> {
+  const { publicInfoUrl } = NETWORKS[network];
+  const resp = await fetch(publicInfoUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type: "referral", user }),
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json();
+}
+
+/** Fetch candle snapshot for charting (uses public HL API — not available on Dwellir info). */
 export async function fetchCandleSnapshot(
   network: NetworkKey,
   coin: string,
@@ -171,8 +191,8 @@ export async function fetchCandleSnapshot(
 ): Promise<
   Array<{ t: number; o: string; h: string; l: string; c: string; v: string }>
 > {
-  const { apiUrl } = NETWORKS[network];
-  const resp = await fetch(`${apiUrl}/info`, {
+  const { publicInfoUrl } = NETWORKS[network];
+  const resp = await fetch(publicInfoUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

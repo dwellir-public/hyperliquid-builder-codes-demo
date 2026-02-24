@@ -28,7 +28,7 @@ export function useOpenOrders() {
     queryKey: ["openOrders", network, address],
     queryFn: () => fetchOpenOrders(network, address!),
     enabled: !!address,
-    refetchInterval: 10_000,
+    refetchInterval: network === "mainnet" ? 3_000 : 10_000,
   });
 
   const cancelOrder = useCallback(

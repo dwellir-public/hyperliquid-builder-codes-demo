@@ -44,6 +44,6 @@ export function useAccountState() {
       };
     },
     enabled: !!address,
-    refetchInterval: 15_000,
+    refetchInterval: network === "mainnet" ? 1_000 : 15_000,
   });
 }

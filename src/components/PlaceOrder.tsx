@@ -6,10 +6,12 @@ import { useAccount } from "wagmi";
 import { useAgentWallet } from "@/hooks/useAgentWallet";
 import { useAllMids, useMeta } from "@/hooks/useMarketData";
 import { useAccountState } from "@/hooks/useAccountState";
+import { useOpenOrders } from "@/hooks/useOpenOrders";
 import {
   DWELLIR_BUILDER_ADDRESS,
   DEFAULT_BUILDER_FEE,
 } from "@/config/constants";
+import { useBBO } from "@/hooks/useDwellirL2Book";
 import StepCard from "./StepCard";
 import TransactionResult from "./TransactionResult";
 
@@ -32,11 +34,18 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
   const [size, setSize] = useState("0.01");
   const [priceOffset, setPriceOffset] = useState("5");
   const [coinSearch, setCoinSearch] = useState("");
+  const { data: openOrders, isLoading: ordersLoading, cancelOrder } = useOpenOrders();
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cancellingOid, setCancellingOid] = useState<number | null>(null);
+  const [cancelResult, setCancelResult] = useState<unknown>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
-  const midPrice = mids?.[coin] ? parseFloat(mids[coin]) : null;
+  const bbo = useBBO(coin);
+  const polledMid = mids?.[coin] ? parseFloat(mids[coin]) : null;
+  const midPrice = bbo?.mid ?? polledMid;
   const assetIndex = meta?.universe.findIndex((a) => a.name === coin) ?? -1;
   const szDecimals = meta?.universe[assetIndex]?.szDecimals;
   const estimatedCost = midPrice ? (parseFloat(size) * midPrice).toFixed(2) : null;
@@ -93,6 +102,20 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancel = async (coin: string, oid: number) => {
+    setCancellingOid(oid);
+    setCancelResult(null);
+    setCancelError(null);
+    try {
+      const res = await cancelOrder(coin, oid);
+      setCancelResult(res ?? { status: "ok" });
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setCancellingOid(null);
     }
   };
 
@@ -192,10 +215,25 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
             </div>
           </div>
           {midPrice && (
-            <p className="text-xs text-hl-muted">
-              Mid: ${midPrice.toFixed(2)} | Limit:{" "}
-              ${computePrice() ?? "—"}
-            </p>
+            <div className="text-xs space-y-1 bg-hl-bg/50 border border-hl-border rounded-lg px-3 py-2">
+              <div className="flex items-center justify-between">
+                <span className="text-hl-muted">Dwellir L2 Orderbook</span>
+                <span className="text-[10px] text-hl-muted/50 font-mono">LIVE</span>
+              </div>
+              <div className="font-mono flex items-baseline gap-2">
+                <span className="text-hl-green">{bbo ? bbo.bestBid.toFixed(2) : "—"}</span>
+                <span className="text-hl-muted/40">/</span>
+                <span className="text-hl-red">{bbo ? bbo.bestAsk.toFixed(2) : "—"}</span>
+                <span className="text-hl-muted/50 text-[10px] ml-auto">BID / ASK</span>
+              </div>
+              <div className="font-mono flex items-baseline gap-2">
+                <span className="text-white">${midPrice.toFixed(2)}</span>
+                <span className="text-hl-muted/50 text-[10px]">MID</span>
+                <span className="text-hl-muted ml-auto">
+                  Limit: ${computePrice() ?? "—"}
+                </span>
+              </div>
+            </div>
           )}
           <button
             onClick={handleOrder}
@@ -205,6 +243,69 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
             {loading ? "Signing..." : "Place Limit Order"}
           </button>
           <TransactionResult result={result} error={error} context="order" />
+
+          {/* Open Orders */}
+          <div className="border-t border-hl-border pt-3 mt-4">
+            <h4 className="text-xs font-medium text-hl-muted mb-2">
+              Open Orders
+            </h4>
+            {ordersLoading ? (
+              <p className="text-xs text-hl-muted">Loading...</p>
+            ) : !openOrders || openOrders.length === 0 ? (
+              <p className="text-xs text-hl-muted">No open orders.</p>
+            ) : (
+              <div className="border border-hl-border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-hl-bg text-hl-muted text-xs">
+                      <th className="text-left px-3 py-2">Coin</th>
+                      <th className="text-left px-3 py-2">Side</th>
+                      <th className="text-right px-3 py-2">Size</th>
+                      <th className="text-right px-3 py-2">Price</th>
+                      <th className="text-right px-3 py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {openOrders.map((order) => (
+                      <tr
+                        key={order.oid}
+                        className="border-t border-hl-border hover:bg-hl-card/50"
+                      >
+                        <td className="px-3 py-2 font-medium">{order.coin}</td>
+                        <td
+                          className={`px-3 py-2 ${
+                            order.side === "B"
+                              ? "text-hl-green"
+                              : "text-hl-red"
+                          }`}
+                        >
+                          {order.side === "B" ? "Buy" : "Sell"}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono">
+                          {order.sz}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono">
+                          ${parseFloat(order.limitPx).toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          <button
+                            onClick={() => handleCancel(order.coin, order.oid)}
+                            disabled={cancellingOid === order.oid}
+                            className="px-2 py-1 text-xs font-medium rounded border border-hl-red/50 text-hl-red hover:bg-hl-red/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {cancellingOid === order.oid
+                              ? "Cancelling..."
+                              : "Cancel"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <TransactionResult result={cancelResult} error={cancelError} context="cancel" />
+          </div>
         </div>
       )}
     </StepCard>
