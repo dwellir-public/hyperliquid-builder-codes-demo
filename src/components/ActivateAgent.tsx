@@ -15,6 +15,7 @@ export default function ActivateAgent({ locked }: ActivateAgentProps) {
     isAgentApproved,
     isApproving,
     approveAgent,
+    deactivateAgent,
     error,
   } = useAgentWallet();
 
@@ -29,13 +30,19 @@ export default function ActivateAgent({ locked }: ActivateAgentProps) {
       {!isConnected ? (
         <p className="text-sm text-hl-muted">Connect your wallet first.</p>
       ) : isAgentApproved ? (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <p className="text-sm text-hl-green">
             Agent wallet active for this session
           </p>
           <p className="text-xs text-hl-muted font-mono break-all">
             Agent: {agentAddress}
           </p>
+          <button
+            onClick={deactivateAgent}
+            className="px-4 py-2 text-sm font-medium rounded-lg border border-hl-red/50 text-hl-red hover:bg-hl-red/10 transition-colors"
+          >
+            Deactivate Agent
+          </button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -51,7 +58,7 @@ export default function ActivateAgent({ locked }: ActivateAgentProps) {
           <button
             onClick={() => approveAgent().catch(() => {})}
             disabled={isApproving}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-hl-bg hover:bg-hl-green/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-white hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isApproving ? "Waiting for signature..." : "Activate Agent"}
           </button>

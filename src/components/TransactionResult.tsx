@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { parseHLResult, type ResultContext } from "@/lib/parseHLResult";
 
 interface TransactionResultProps {
@@ -7,6 +8,9 @@ interface TransactionResultProps {
   error: string | null;
   context?: ResultContext;
 }
+
+const AUTO_DISMISS_MS = 4000;
+const FADE_DURATION_MS = 500;
 
 const ICONS = {
   success: (
@@ -26,12 +30,35 @@ const ICONS = {
   ),
 };
 
-export default function TransactionResult({
+/**
+ * Inner component that manages its own fade lifecycle.
+ * Keyed by content identity so it remounts on new results.
+ */
+function ResultBubble({
   result,
   error,
-  context = "order",
+  context,
 }: TransactionResultProps) {
-  if (!result && !error) return null;
+  const [fading, setFading] = useState(false);
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    const isError = error != null;
+    const parsed = result != null ? parseHLResult(result, context ?? "order") : null;
+    const isResultError = parsed?.icon === "error";
+
+    if (isError || isResultError) return;
+
+    const fadeTimer = setTimeout(() => setFading(true), AUTO_DISMISS_MS);
+    const hideTimer = setTimeout(() => setHidden(true), AUTO_DISMISS_MS + FADE_DURATION_MS);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(hideTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (hidden) return null;
 
   const rawJson =
     result != null
@@ -41,7 +68,12 @@ export default function TransactionResult({
       : null;
 
   return (
-    <div className="mt-4 space-y-2">
+    <div
+      className={`mt-4 space-y-2 animate-toast-enter transition-all ease-in-out ${
+        fading ? "opacity-0 translate-y-1" : ""
+      }`}
+      style={{ transitionDuration: `${FADE_DURATION_MS}ms` }}
+    >
       {error ? (
         <div className="bg-hl-red/10 border border-hl-red/30 rounded-lg p-3 flex items-start gap-2">
           {ICONS.error}
@@ -51,7 +83,7 @@ export default function TransactionResult({
       {result != null ? (
         <>
           {(() => {
-            const parsed = parseHLResult(result, context);
+            const parsed = parseHLResult(result, context ?? "order");
             return (
               <div
                 className={`border rounded-lg p-3 flex items-start gap-2 ${
@@ -71,7 +103,7 @@ export default function TransactionResult({
               </div>
             );
           })()}
-          {rawJson && (
+          {rawJson && !fading && (
             <details className="text-xs">
               <summary className="text-hl-muted cursor-pointer hover:text-white">
                 Raw response
@@ -84,5 +116,28 @@ export default function TransactionResult({
         </>
       ) : null}
     </div>
+  );
+}
+
+export default function TransactionResult({
+  result,
+  error,
+  context = "order",
+}: TransactionResultProps) {
+  if (!result && !error) return null;
+
+  // Key by content identity so the inner component remounts on new results,
+  // giving it a fresh animation and auto-dismiss timer.
+  const contentKey =
+    (result != null ? JSON.stringify(result) : "") +
+    (error ?? "");
+
+  return (
+    <ResultBubble
+      key={contentKey}
+      result={result}
+      error={error}
+      context={context}
+    />
   );
 }

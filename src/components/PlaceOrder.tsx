@@ -238,7 +238,7 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
           <button
             onClick={handleOrder}
             disabled={loading || assetIndex < 0 || !!sizeError}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-hl-bg hover:bg-hl-green/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-white hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? "Signing..." : "Place Limit Order"}
           </button>

@@ -9,7 +9,7 @@ export interface NetworkContextValue {
 }
 
 export const NetworkContext = createContext<NetworkContextValue>({
-  network: "testnet",
+  network: "mainnet",
   setNetwork: () => {},
 });
 

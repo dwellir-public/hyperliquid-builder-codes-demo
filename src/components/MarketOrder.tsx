@@ -287,7 +287,7 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
 
           <p className="text-xs text-hl-muted">
             Warning: This will execute immediately if there is sufficient
-            liquidity. Use on testnet first.
+            liquidity. Real funds will be used.
           </p>
           <TransactionResult result={result} error={error} context="order" />
 

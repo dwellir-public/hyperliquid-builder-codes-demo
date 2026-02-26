@@ -2,22 +2,109 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Dwellir Token Scaffold ─── */
 :root {
-  --bg: #0d1117;
-  --card: #161b22;
-  --border: #30363d;
-  --text: #e6edf3;
-  --muted: #8b949e;
-  --green: #50fa7b;
-  --red: #ff5555;
+  --font-family-heading: 'Ubuntu', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-family-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-heading: 1.1;
+  --line-height-body: 1.5;
+  --button-text-color: #FFFFFF;
+  --shadow-md: 0 2px 4px 0 rgb(12 0 46 / 4%);
+  --shadow-lg: 0 10px 14px 0 rgb(12 0 46 / 6%);
+  --z-sticky: 7777;
+  --z-navbar: 8888;
+  --z-drawer: 9999;
+  --z-modal: 9999;
+  --navbar-height: 76px;
+  --rail-gap: 2rem;
+  --code-font-family: 'CaskaydiaCove Nerd Font', 'Cascadia Code', 'Cascadia Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --code-block-bg: #f1f3f5;
+}
+
+.next-light-theme {
+  --background: 255,255,255;
+  --secondBackground: 248,249,250;
+  --text: 33,37,41;
+  --textSecondary: 255,255,255;
+  --primary: 82,177,150;
+  --primary-light: 218,241,235;
+  --primary-dark: 41,89,75;
+  --secondary: 55,140,117;
+  --tertiary: 231,241,251;
+  --cardBackground: 248,249,250;
+  --inputBackground: 255,255,255;
+  --navbarBackground: 255,255,255;
+  --modalBackground: 241,243,245;
+  --errorColor: 250,82,82;
+  --warningColor: 250,176,5;
+  --successColor: 82,177,150;
+  --logoColor: 41,89,75;
+  --inputText: 33,37,41;
+  --inputPlaceholder: 173,181,189;
+  --borderColor: 222,226,230;
+}
+
+.next-dark-theme {
+  --background: 46,46,46;
+  --secondBackground: 36,36,36;
+  --text: 201,201,201;
+  --textSecondary: 255,255,255;
+  --primary: 82,177,150;
+  --primary-light: 118,192,171;
+  --primary-dark: 41,89,75;
+  --secondary: 55,140,117;
+  --tertiary: 59,59,59;
+  --cardBackground: 36,36,36;
+  --inputBackground: 59,59,59;
+  --navbarBackground: 46,46,46;
+  --modalBackground: 31,31,31;
+  --errorColor: 240,62,62;
+  --warningColor: 245,159,0;
+  --successColor: 82,177,150;
+  --logoColor: #FFFFFF;
+  --inputText: 255,255,255;
+  --inputPlaceholder: 130,130,130;
+  --tableBackground: 20,20,20;
+  --tableText: 201,201,201;
+  --tableBorder: 59,59,59;
+  --tableStripe: 36,36,36;
+  --borderColor: 59,59,59;
+  --code-block-bg: #242424;
 }
 
 body {
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: rgb(var(--background));
+  color: rgb(var(--text));
+  font-family: var(--font-family-body);
 }
 
-/* Override RainbowKit modal z-index */
+pre, code, kbd, samp {
+  font-family: var(--code-font-family);
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Toast animations */
+@keyframes toast-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-toast-enter {
+  animation: toast-enter 0.3s ease-out both;
+}
+
+/* RainbowKit modal override */
 [data-rk] {
   --rk-radii-modal: 12px;
 }

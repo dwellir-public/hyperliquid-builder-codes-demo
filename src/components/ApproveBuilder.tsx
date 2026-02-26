@@ -72,7 +72,7 @@ export default function ApproveBuilder() {
           <button
             onClick={handleApprove}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-hl-bg hover:bg-hl-green/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-white hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? "Waiting for signature..." : "Approve Builder"}
           </button>

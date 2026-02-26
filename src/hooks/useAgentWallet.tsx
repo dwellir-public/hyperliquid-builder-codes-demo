@@ -18,14 +18,23 @@ import { createAgentWalletClient } from "@/lib/hyperliquid";
 
 const STORAGE_PREFIX = "hl-agent-key-";
 
-function getOrCreateAgentKey(userAddress: string): Hex {
+function loadAgentKey(userAddress: string): Hex | null {
   const storageKey = `${STORAGE_PREFIX}${userAddress.toLowerCase()}`;
   const stored = sessionStorage.getItem(storageKey);
   if (stored && stored.startsWith("0x")) return stored as Hex;
+  return null;
+}
 
+function createAndStoreAgentKey(userAddress: string): Hex {
+  const storageKey = `${STORAGE_PREFIX}${userAddress.toLowerCase()}`;
   const pk = generatePrivateKey();
   sessionStorage.setItem(storageKey, pk);
   return pk;
+}
+
+function removeAgentKey(userAddress: string): void {
+  const storageKey = `${STORAGE_PREFIX}${userAddress.toLowerCase()}`;
+  sessionStorage.removeItem(storageKey);
 }
 
 interface AgentWalletState {
@@ -34,6 +43,7 @@ interface AgentWalletState {
   isAgentApproved: boolean;
   isApproving: boolean;
   approveAgent: () => Promise<void>;
+  deactivateAgent: () => void;
   error: string | null;
 }
 
@@ -43,6 +53,7 @@ const defaultState: AgentWalletState = {
   isAgentApproved: false,
   isApproving: false,
   approveAgent: async () => {},
+  deactivateAgent: () => {},
   error: null,
 };
 
@@ -56,36 +67,54 @@ export function AgentWalletProviderInner({ children }: { children: React.ReactNo
   const { address } = useAccount();
   const { network } = useNetwork();
   const { walletClient: userWalletClient } = useHyperliquid();
+  const [agentPrivateKey, setAgentPrivateKey] = useState<Hex | null>(null);
   const [isApproved, setIsApproved] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const agentAccount = useMemo(() => {
-    if (!address) return null;
-    const pk = getOrCreateAgentKey(address);
-    return privateKeyToAccount(pk);
+  // Restore key from sessionStorage when the wallet address changes (or on mount)
+  useEffect(() => {
+    if (!address) {
+      setAgentPrivateKey(null);
+      setIsApproved(false);
+      setError(null);
+      return;
+    }
+    const existing = loadAgentKey(address);
+    setAgentPrivateKey(existing); // null if nothing stored
+    setIsApproved(false);
+    setError(null);
   }, [address]);
+
+  const agentAccount = useMemo(() => {
+    if (!agentPrivateKey) return null;
+    return privateKeyToAccount(agentPrivateKey);
+  }, [agentPrivateKey]);
 
   const agentWalletClient = useMemo(() => {
     if (!agentAccount) return null;
     return createAgentWalletClient(network, agentAccount);
   }, [network, agentAccount]);
 
-  // Reset approval state when user address changes
-  useEffect(() => {
-    setIsApproved(false);
-    setError(null);
-  }, [address]);
-
   const approveAgent = useCallback(async () => {
-    if (!userWalletClient || !agentAccount) {
+    if (!userWalletClient || !address) {
       throw new Error("Wallet not connected");
     }
+
+    // Use existing key from storage, or generate a fresh one
+    let pk = loadAgentKey(address);
+    if (!pk) {
+      pk = createAndStoreAgentKey(address);
+    }
+    setAgentPrivateKey(pk);
+
+    const account = privateKeyToAccount(pk);
+
     setIsApproving(true);
     setError(null);
     try {
       await userWalletClient.approveAgent({
-        agentAddress: agentAccount.address,
+        agentAddress: account.address,
         agentName: "DwellirBuilder",
       });
       setIsApproved(true);
@@ -101,7 +130,15 @@ export function AgentWalletProviderInner({ children }: { children: React.ReactNo
     } finally {
       setIsApproving(false);
     }
-  }, [userWalletClient, agentAccount]);
+  }, [userWalletClient, address]);
+
+  const deactivateAgent = useCallback(() => {
+    if (!address) return;
+    removeAgentKey(address);
+    setAgentPrivateKey(null);
+    setIsApproved(false);
+    setError(null);
+  }, [address]);
 
   const value = useMemo<AgentWalletState>(
     () => ({
@@ -110,9 +147,10 @@ export function AgentWalletProviderInner({ children }: { children: React.ReactNo
       isAgentApproved: isApproved,
       isApproving,
       approveAgent,
+      deactivateAgent,
       error,
     }),
-    [agentWalletClient, agentAccount, isApproved, isApproving, approveAgent, error]
+    [agentWalletClient, agentAccount, isApproved, isApproving, approveAgent, deactivateAgent, error]
   );
 
   return (

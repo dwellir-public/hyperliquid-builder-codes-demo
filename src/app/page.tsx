@@ -33,17 +33,15 @@ function ConnectHero() {
             Connect your wallet to get started
           </p>
           <p className="text-xs text-hl-muted">
-            You'll need a wallet (e.g. MetaMask) with an Arbitrum network
-            configured. Start on{" "}
-            <span className="text-yellow-400">Testnet</span> to experiment
-            without risk.
+            You'll need a wallet (e.g. MetaMask) configured for Arbitrum
+            mainnet.
           </p>
           <ConnectButton.Custom>
             {({ openConnectModal, mounted }) => (
               <button
                 onClick={openConnectModal}
                 disabled={!mounted}
-                className="w-full px-6 py-3 text-sm font-semibold rounded-lg bg-hl-green text-hl-bg hover:bg-hl-green/90 disabled:opacity-50 transition-colors"
+                className="w-full px-6 py-3 text-sm font-semibold rounded-lg bg-hl-green text-white hover:brightness-95 disabled:opacity-50 transition-colors"
               >
                 Connect Wallet
               </button>

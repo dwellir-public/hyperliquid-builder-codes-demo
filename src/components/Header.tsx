@@ -1,13 +1,12 @@
 "use client";
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import NetworkToggle from "./NetworkToggle";
 
 export default function Header() {
   return (
     <header className="flex items-center justify-between px-6 py-4 border-b border-hl-border">
       <div className="flex items-center gap-3">
-        <h1 className="text-lg font-bold tracking-tight">
+        <h1 className="text-lg font-bold tracking-tight font-heading">
           Hyperliquid Builder Codes
         </h1>
         <span className="text-xs text-hl-muted bg-hl-card px-2 py-0.5 rounded">
@@ -15,7 +14,6 @@ export default function Header() {
         </span>
       </div>
       <div className="flex items-center gap-3">
-        <NetworkToggle />
         <ConnectButton.Custom>
           {({
             account,
@@ -44,7 +42,7 @@ export default function Header() {
                     return (
                       <button
                         onClick={openConnectModal}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-hl-bg hover:bg-hl-green/90 transition-colors"
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-white hover:brightness-95 transition-colors"
                       >
                         Connect Wallet
                       </button>

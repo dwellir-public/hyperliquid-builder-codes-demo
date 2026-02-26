@@ -14,15 +14,15 @@ import type { NetworkKey } from "@/config/constants";
 const queryClient = new QueryClient();
 
 export default function Providers({ children }: { children: ReactNode }) {
-  const [network, setNetwork] = useState<NetworkKey>("testnet");
+  const [network, setNetwork] = useState<NetworkKey>("mainnet");
 
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={darkTheme({
-            accentColor: "#50fa7b",
-            accentColorForeground: "#0d1117",
+            accentColor: "#52B196",
+            accentColorForeground: "#FFFFFF",
             borderRadius: "medium",
           })}
         >

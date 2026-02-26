@@ -44,35 +44,35 @@ export default function PriceChart({ coin }: PriceChartProps) {
 
       const chart = createChart(chartContainerRef.current, {
         layout: {
-          background: { type: ColorType.Solid, color: "#0d1117" },
-          textColor: "#8b949e",
+          background: { type: ColorType.Solid, color: "#2E2E2E" },
+          textColor: "#828282",
         },
         grid: {
-          vertLines: { color: "#21262d" },
-          horzLines: { color: "#21262d" },
+          vertLines: { color: "#3B3B3B" },
+          horzLines: { color: "#3B3B3B" },
         },
         width: chartContainerRef.current.clientWidth,
         height: 300,
         timeScale: {
-          borderColor: "#30363d",
+          borderColor: "#3B3B3B",
           timeVisible: true,
         },
         rightPriceScale: {
-          borderColor: "#30363d",
+          borderColor: "#3B3B3B",
         },
         crosshair: {
-          horzLine: { color: "#50fa7b33" },
-          vertLine: { color: "#50fa7b33" },
+          horzLine: { color: "#52B19633" },
+          vertLine: { color: "#52B19633" },
         },
       });
 
       const candleSeries = chart.addSeries(CandlestickSeries, {
-        upColor: "#50fa7b",
-        downColor: "#ff5555",
-        borderDownColor: "#ff5555",
-        borderUpColor: "#50fa7b",
-        wickDownColor: "#ff5555",
-        wickUpColor: "#50fa7b",
+        upColor: "#52B196",
+        downColor: "#F03E3E",
+        borderDownColor: "#F03E3E",
+        borderUpColor: "#52B196",
+        wickDownColor: "#F03E3E",
+        wickUpColor: "#52B196",
       });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
