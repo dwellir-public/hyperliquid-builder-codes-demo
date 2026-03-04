@@ -23,7 +23,7 @@ Each step includes a live candlestick chart, account balance, and human-readable
 
 - Node.js 18+
 - A browser wallet (MetaMask recommended)
-- A [WalletConnect](https://cloud.walletconnect.com) project ID (free)
+- A [WalletConnect](https://dashboard.reown.com) project ID (free)
 
 ### Install
 
