@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useNetwork } from "./useNetwork";
-import { fetchReferral } from "@/lib/hyperliquid";
 import { DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
+import { fetchReferral } from "@/lib/hyperliquid";
+import { useNetwork } from "./useNetwork";
 
 export function useBuilderIncome() {
   const { network } = useNetwork();

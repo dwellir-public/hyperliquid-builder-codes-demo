@@ -2,11 +2,8 @@
 
 import { useMemo } from "react";
 import { useWalletClient } from "wagmi";
+import { createPublicClient, createWalletClient } from "@/lib/hyperliquid";
 import { useNetwork } from "./useNetwork";
-import {
-  createPublicClient,
-  createWalletClient,
-} from "@/lib/hyperliquid";
 
 /**
  * Provides Hyperliquid clients.

@@ -1,8 +1,8 @@
 "use client";
 
 import { useAccount } from "wagmi";
-import { useBuilderApproval } from "@/hooks/useBuilderApproval";
 import { DWELLIR_BUILDER_ADDRESS, feeToHuman } from "@/config/constants";
+import { useBuilderApproval } from "@/hooks/useBuilderApproval";
 import StepCard from "./StepCard";
 
 export default function ApprovalStatus() {
@@ -20,9 +20,7 @@ export default function ApprovalStatus() {
       ) : isLoading ? (
         <p className="text-sm text-hl-muted">Querying...</p>
       ) : error ? (
-        <p className="text-sm text-hl-red">
-          Error: {(error as Error).message}
-        </p>
+        <p className="text-sm text-hl-red">Error: {(error as Error).message}</p>
       ) : (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -36,9 +34,7 @@ export default function ApprovalStatus() {
             </span>
           </div>
           {maxFee !== undefined && maxFee > 0 && (
-            <p className="text-sm text-hl-muted">
-              Max approved fee: {feeToHuman(maxFee)}
-            </p>
+            <p className="text-sm text-hl-muted">Max approved fee: {feeToHuman(maxFee)}</p>
           )}
           <p className="text-xs text-hl-muted font-mono break-all">
             Builder: {DWELLIR_BUILDER_ADDRESS}

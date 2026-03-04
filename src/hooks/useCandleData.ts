@@ -2,9 +2,9 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { useNetwork } from "./useNetwork";
 import { fetchCandleSnapshot } from "@/lib/hyperliquid";
-import { useDwellirL2Book, type L2Update } from "./useDwellirL2Book";
+import { type L2Update, useDwellirL2Book } from "./useDwellirL2Book";
+import { useNetwork } from "./useNetwork";
 
 export interface Candle {
   time: number;
@@ -82,7 +82,7 @@ export function useCandleData(coin: string, interval: string = "1h") {
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [queryClient, network, coin, interval]
+    [queryClient, interval, queryKey],
   );
 
   useDwellirL2Book(coin, onL2Update);

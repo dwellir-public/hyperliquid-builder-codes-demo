@@ -1,17 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import dynamic from "next/dynamic";
+import { useState } from "react";
 import { useAccount } from "wagmi";
-import { useAgentWallet } from "@/hooks/useAgentWallet";
-import { useAllMids, useMeta } from "@/hooks/useMarketData";
+import { DEFAULT_BUILDER_FEE, DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
 import { useAccountState } from "@/hooks/useAccountState";
-import { useOpenOrders } from "@/hooks/useOpenOrders";
-import {
-  DWELLIR_BUILDER_ADDRESS,
-  DEFAULT_BUILDER_FEE,
-} from "@/config/constants";
+import { useAgentWallet } from "@/hooks/useAgentWallet";
 import { useBBO } from "@/hooks/useDwellirL2Book";
+import { useAllMids, useMeta } from "@/hooks/useMarketData";
+import { useOpenOrders } from "@/hooks/useOpenOrders";
 import StepCard from "./StepCard";
 import TransactionResult from "./TransactionResult";
 
@@ -59,7 +56,7 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
 
   const validateSize = (): string | null => {
     const s = parseFloat(size);
-    if (isNaN(s) || s <= 0) return "Size must be positive";
+    if (Number.isNaN(s) || s <= 0) return "Size must be positive";
     if (szDecimals !== undefined) {
       const parts = size.split(".");
       if (parts[1] && parts[1].length > szDecimals) {
@@ -121,9 +118,7 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
 
   const allCoins = meta?.universe.map((a) => a.name) ?? [];
   const filteredCoins = coinSearch
-    ? allCoins.filter((c) =>
-        c.toLowerCase().includes(coinSearch.toLowerCase())
-      )
+    ? allCoins.filter((c) => c.toLowerCase().includes(coinSearch.toLowerCase()))
     : allCoins;
 
   return (
@@ -142,9 +137,7 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
           {account && (
             <p className="text-xs text-hl-muted">
               Balance: ${account.balance.toFixed(2)} USDC
-              {estimatedCost && (
-                <> | Est. cost: ${estimatedCost}</>
-              )}
+              {estimatedCost && <> | Est. cost: ${estimatedCost}</>}
             </p>
           )}
 
@@ -157,7 +150,7 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
                 onChange={(e) => {
                   setCoinSearch(e.target.value);
                   const match = allCoins.find(
-                    (c) => c.toLowerCase() === e.target.value.toLowerCase()
+                    (c) => c.toLowerCase() === e.target.value.toLowerCase(),
                   );
                   if (match) {
                     setCoin(match);
@@ -198,14 +191,10 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
                     : "border-hl-border focus:border-hl-green"
                 }`}
               />
-              {sizeError && (
-                <p className="text-xs text-hl-red mt-0.5">{sizeError}</p>
-              )}
+              {sizeError && <p className="text-xs text-hl-red mt-0.5">{sizeError}</p>}
             </div>
             <div>
-              <label className="text-xs text-hl-muted block mb-1">
-                Offset from mid (%)
-              </label>
+              <label className="text-xs text-hl-muted block mb-1">Offset from mid (%)</label>
               <input
                 type="text"
                 value={priceOffset}
@@ -229,9 +218,7 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
               <div className="font-mono flex items-baseline gap-2">
                 <span className="text-white">${midPrice.toFixed(2)}</span>
                 <span className="text-hl-muted/50 text-[10px]">MID</span>
-                <span className="text-hl-muted ml-auto">
-                  Limit: ${computePrice() ?? "—"}
-                </span>
+                <span className="text-hl-muted ml-auto">Limit: ${computePrice() ?? "—"}</span>
               </div>
             </div>
           )}
@@ -246,9 +233,7 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
 
           {/* Open Orders */}
           <div className="border-t border-hl-border pt-3 mt-4">
-            <h4 className="text-xs font-medium text-hl-muted mb-2">
-              Open Orders
-            </h4>
+            <h4 className="text-xs font-medium text-hl-muted mb-2">Open Orders</h4>
             {ordersLoading ? (
               <p className="text-xs text-hl-muted">Loading...</p>
             ) : !openOrders || openOrders.length === 0 ? (
@@ -267,23 +252,16 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
                   </thead>
                   <tbody>
                     {openOrders.map((order) => (
-                      <tr
-                        key={order.oid}
-                        className="border-t border-hl-border hover:bg-hl-card/50"
-                      >
+                      <tr key={order.oid} className="border-t border-hl-border hover:bg-hl-card/50">
                         <td className="px-3 py-2 font-medium">{order.coin}</td>
                         <td
                           className={`px-3 py-2 ${
-                            order.side === "B"
-                              ? "text-hl-green"
-                              : "text-hl-red"
+                            order.side === "B" ? "text-hl-green" : "text-hl-red"
                           }`}
                         >
                           {order.side === "B" ? "Buy" : "Sell"}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono">
-                          {order.sz}
-                        </td>
+                        <td className="px-3 py-2 text-right font-mono">{order.sz}</td>
                         <td className="px-3 py-2 text-right font-mono">
                           ${parseFloat(order.limitPx).toLocaleString()}
                         </td>
@@ -293,9 +271,7 @@ export default function PlaceOrder({ coin, setCoin, locked }: PlaceOrderProps) {
                             disabled={cancellingOid === order.oid}
                             className="px-2 py-1 text-xs font-medium rounded border border-hl-red/50 text-hl-red hover:bg-hl-red/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            {cancellingOid === order.oid
-                              ? "Cancelling..."
-                              : "Cancel"}
+                            {cancellingOid === order.oid ? "Cancelling..." : "Cancel"}
                           </button>
                         </td>
                       </tr>

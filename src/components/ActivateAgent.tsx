@@ -10,14 +10,8 @@ interface ActivateAgentProps {
 
 export default function ActivateAgent({ locked }: ActivateAgentProps) {
   const { isConnected } = useAccount();
-  const {
-    agentAddress,
-    isAgentApproved,
-    isApproving,
-    approveAgent,
-    deactivateAgent,
-    error,
-  } = useAgentWallet();
+  const { agentAddress, isAgentApproved, isApproving, approveAgent, deactivateAgent, error } =
+    useAgentWallet();
 
   return (
     <StepCard
@@ -31,12 +25,8 @@ export default function ActivateAgent({ locked }: ActivateAgentProps) {
         <p className="text-sm text-hl-muted">Connect your wallet first.</p>
       ) : isAgentApproved ? (
         <div className="space-y-3">
-          <p className="text-sm text-hl-green">
-            Agent wallet active for this session
-          </p>
-          <p className="text-xs text-hl-muted font-mono break-all">
-            Agent: {agentAddress}
-          </p>
+          <p className="text-sm text-hl-green">Agent wallet active for this session</p>
+          <p className="text-xs text-hl-muted font-mono break-all">Agent: {agentAddress}</p>
           <button
             onClick={deactivateAgent}
             className="px-4 py-2 text-sm font-medium rounded-lg border border-hl-red/50 text-hl-red hover:bg-hl-red/10 transition-colors"
@@ -47,8 +37,8 @@ export default function ActivateAgent({ locked }: ActivateAgentProps) {
       ) : (
         <div className="space-y-3">
           <p className="text-xs text-hl-muted">
-            A temporary key will sign orders on your behalf. It is stored only
-            in this browser tab and cleared when you close it.
+            A temporary key will sign orders on your behalf. It is stored only in this browser tab
+            and cleared when you close it.
           </p>
           {agentAddress && (
             <p className="text-xs text-hl-muted font-mono break-all">
@@ -62,9 +52,7 @@ export default function ActivateAgent({ locked }: ActivateAgentProps) {
           >
             {isApproving ? "Waiting for signature..." : "Activate Agent"}
           </button>
-          {error && (
-            <p className="text-sm text-hl-red break-all">{error}</p>
-          )}
+          {error && <p className="text-sm text-hl-red break-all">{error}</p>}
         </div>
       )}
     </StepCard>

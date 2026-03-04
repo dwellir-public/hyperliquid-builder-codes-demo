@@ -74,7 +74,7 @@ The agent key is:
 
 ### Tech Stack
 
-- **Next.js 14** (App Router)
+- **Next.js 16** (App Router, Turbopack)
 - **wagmi + viem** for wallet connection and typed-data signing
 - **RainbowKit** for the connect-wallet UI
 - **@nktkas/hyperliquid** SDK for Hyperliquid API interaction

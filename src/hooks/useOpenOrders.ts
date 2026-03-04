@@ -1,12 +1,12 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { useAccount } from "wagmi";
-import { useNetwork } from "./useNetwork";
+import { fetchOpenOrders } from "@/lib/hyperliquid";
 import { useAgentWallet } from "./useAgentWallet";
 import { useMeta } from "./useMarketData";
-import { fetchOpenOrders } from "@/lib/hyperliquid";
-import { useCallback } from "react";
+import { useNetwork } from "./useNetwork";
 
 export interface OpenOrder {
   coin: string;
@@ -43,7 +43,7 @@ export function useOpenOrders() {
         queryKey: ["openOrders", network, address],
       });
     },
-    [agentWalletClient, meta, queryClient, network, address]
+    [agentWalletClient, meta, queryClient, network, address],
   );
 
   return { ...query, cancelOrder };

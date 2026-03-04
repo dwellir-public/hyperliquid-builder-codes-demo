@@ -2,8 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
-import { useNetwork } from "./useNetwork";
 import { fetchClearinghouseState } from "@/lib/hyperliquid";
+import { useNetwork } from "./useNetwork";
 
 export interface Position {
   coin: string;

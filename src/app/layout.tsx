@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Ubuntu, Roboto } from "next/font/google";
+import { Roboto, Ubuntu } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 
@@ -21,11 +21,7 @@ export const metadata: Metadata = {
     "Interactive demo showing how to integrate builder codes on Hyperliquid — connect your wallet and try it live.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`next-dark-theme ${ubuntu.variable} ${roboto.variable}`}>
       <head>

@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useNetwork } from "./useNetwork";
 import { fetchAllMids, fetchMeta } from "@/lib/hyperliquid";
+import { useNetwork } from "./useNetwork";
 
 export function useAllMids() {
   const { network } = useNetwork();

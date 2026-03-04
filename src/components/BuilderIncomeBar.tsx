@@ -1,7 +1,7 @@
 "use client";
 
+import { DEFAULT_BUILDER_FEE, DWELLIR_BUILDER_ADDRESS, feeToHuman } from "@/config/constants";
 import { useBuilderIncome } from "@/hooks/useBuilderIncome";
-import { DWELLIR_BUILDER_ADDRESS, feeToHuman, DEFAULT_BUILDER_FEE } from "@/config/constants";
 
 export default function BuilderIncomeBar() {
   const { data, isLoading } = useBuilderIncome();
@@ -26,9 +26,7 @@ export default function BuilderIncomeBar() {
           <span className="font-mono text-[10px] hidden sm:inline truncate max-w-[180px]">
             {DWELLIR_BUILDER_ADDRESS}
           </span>
-          <span className="text-[10px]">
-            Fee: {feeToHuman(DEFAULT_BUILDER_FEE)}
-          </span>
+          <span className="text-[10px]">Fee: {feeToHuman(DEFAULT_BUILDER_FEE)}</span>
           <a
             href="https://dwellir.com"
             className="text-hl-green hover:underline whitespace-nowrap"

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useNetwork } from "@/hooks/useNetwork";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useSwitchChain } from "wagmi";
 import { arbitrum, arbitrumSepolia } from "wagmi/chains";
+import { useNetwork } from "@/hooks/useNetwork";
 
 export default function NetworkToggle() {
   const { network, setNetwork } = useNetwork();
@@ -49,12 +49,9 @@ export default function NetworkToggle() {
 
       {showWarning && (
         <div className="absolute right-0 top-full mt-2 z-50 w-72 bg-hl-card border border-hl-red/40 rounded-xl p-4 shadow-xl">
-          <p className="text-sm font-medium text-white mb-1">
-            Switching to Mainnet
-          </p>
+          <p className="text-sm font-medium text-white mb-1">Switching to Mainnet</p>
           <p className="text-xs text-hl-muted mb-3">
-            Orders will use real funds. Make sure you understand the risks
-            before proceeding.
+            Orders will use real funds. Make sure you understand the risks before proceeding.
           </p>
           <div className="flex gap-2">
             <button
