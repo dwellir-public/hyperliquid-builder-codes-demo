@@ -69,9 +69,17 @@ function ConnectHero() {
 }
 
 function WizardFlow() {
-  const { data: account } = useAccountState();
+  const { data: account, isLoading: isAccountLoading } = useAccountState();
   const hasBalance = account ? account.balance > 0 : false;
   const wizard = useWizard(!hasBalance);
+
+  if (isAccountLoading) {
+    return (
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+        <p className="text-center text-sm text-hl-muted">Loading account state...</p>
+      </main>
+    );
+  }
 
   const renderStep = () => {
     switch (wizard.currentStepId) {

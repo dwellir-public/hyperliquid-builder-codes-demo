@@ -16,17 +16,19 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
   const { network } = useNetwork();
   const { data: account } = useAccountState();
   const [amount, setAmount] = useState("");
-  const [step, setStep] = useState<"idle" | "approving" | "transferring" | "waiting">("idle");
+  const [step, setStep] = useState<"idle" | "transferring" | "waiting">("idle");
+  const [txError, setTxError] = useState<string | null>(null);
 
   const usdcAddress = USDC_ADDRESS[network];
   const bridgeAddress = BRIDGE2_ADDRESS[network];
+  const chainId = network === "mainnet" ? 42161 : 421614;
 
   const { data: rawBalance, refetch: refetchBalance } = useReadContract({
     address: usdcAddress,
     abi: erc20Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
-    chainId: 42161,
+    chainId,
     query: { enabled: !!address, refetchInterval: 10_000 },
   });
 
@@ -35,7 +37,7 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
 
   useEffect(() => {
     if (balance !== undefined && amount === "") {
-      setAmount(Math.floor(balance).toString());
+      setAmount(balance.toFixed(2));
     }
   }, [balance, amount]);
 
@@ -46,65 +48,51 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
     }
   }, [account, onComplete]);
 
-  // Approve USDC spending
-  const {
-    writeContract: approveUsdc,
-    data: approveTxHash,
-    isPending: isApprovePending,
-  } = useWriteContract();
-
-  const { isSuccess: isApproveConfirmed } = useWaitForTransactionReceipt({
-    hash: approveTxHash,
-  });
-
-  // Transfer to Bridge2
+  // Transfer to Bridge2 (direct ERC-20 transfer, no approve needed)
   const {
     writeContract: transferUsdc,
     data: transferTxHash,
     isPending: isTransferPending,
+    error: transferError,
   } = useWriteContract();
 
   const { isSuccess: isTransferConfirmed } = useWaitForTransactionReceipt({
     hash: transferTxHash,
   });
 
-  // Chain: approve confirmed → trigger transfer
+  // Handle transfer error — reset to idle
   useEffect(() => {
-    if (isApproveConfirmed && step === "approving") {
-      setStep("transferring");
-      const parsedAmount = parseUnits(amount, 6);
-      transferUsdc({
-        address: usdcAddress,
-        abi: erc20Abi,
-        functionName: "transfer",
-        args: [bridgeAddress, parsedAmount],
-        chainId: 42161,
-      });
+    if (transferError && step === "transferring") {
+      setStep("idle");
+      setTxError(transferError.message);
     }
-  }, [isApproveConfirmed, step, amount, usdcAddress, bridgeAddress, transferUsdc]);
+  }, [transferError, step]);
 
   // Transfer confirmed → waiting for HL credit
   useEffect(() => {
     if (isTransferConfirmed && step === "transferring") {
       setStep("waiting");
+      setTxError(null);
       refetchBalance();
     }
   }, [isTransferConfirmed, step, refetchBalance]);
 
   const handleDeposit = () => {
+    setTxError(null);
+    setStep("transferring");
     const parsedAmount = parseUnits(amount, 6);
-    setStep("approving");
-    approveUsdc({
+    transferUsdc({
       address: usdcAddress,
       abi: erc20Abi,
-      functionName: "approve",
+      functionName: "transfer",
       args: [bridgeAddress, parsedAmount],
-      chainId: 42161,
+      chainId,
     });
   };
 
   const parsedAmount = amount ? Number(amount) : 0;
   const isValidAmount = parsedAmount >= MIN_DEPOSIT_USDC && parsedAmount <= (balance ?? 0);
+
   return (
     <div className="space-y-4">
       <div>
@@ -154,15 +142,6 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
             </button>
           )}
 
-          {step === "approving" && (
-            <div className="flex items-center gap-2 text-sm text-hl-muted">
-              <Spinner />
-              {isApprovePending
-                ? "Approve USDC spending in your wallet..."
-                : "Waiting for approval confirmation..."}
-            </div>
-          )}
-
           {step === "transferring" && (
             <div className="flex items-center gap-2 text-sm text-hl-muted">
               <Spinner />
@@ -176,6 +155,19 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
             <div className="flex items-center gap-2 text-sm text-hl-green">
               <Spinner />
               Transfer confirmed! Waiting for Hyperliquid to credit your account (~1 min)...
+            </div>
+          )}
+
+          {txError && (
+            <div className="space-y-2">
+              <p className="text-sm text-hl-red">Transaction failed: {txError}</p>
+              <button
+                type="button"
+                onClick={() => setTxError(null)}
+                className="text-xs text-hl-muted hover:text-white transition-colors"
+              >
+                Dismiss
+              </button>
             </div>
           )}
 
