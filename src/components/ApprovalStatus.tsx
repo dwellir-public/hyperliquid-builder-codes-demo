@@ -27,7 +27,19 @@ export default function ApprovalStatus({ onComplete }: ApprovalStatusProps) {
       ) : isLoading ? (
         <p className="text-sm text-hl-muted">Querying...</p>
       ) : error ? (
-        <p className="text-sm text-hl-red">Error: {(error as Error).message}</p>
+        <div className="space-y-3">
+          <p className="text-sm text-hl-red">Error: {(error as Error).message}</p>
+          <p className="text-xs text-hl-muted">
+            Could not check approval status. You can still continue to the approval step.
+          </p>
+          <button
+            type="button"
+            onClick={onComplete}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-white hover:brightness-95 transition-colors"
+          >
+            Continue anyway
+          </button>
+        </div>
       ) : (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
