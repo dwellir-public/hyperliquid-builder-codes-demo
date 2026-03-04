@@ -38,8 +38,9 @@ jobs:
             echo "Dev server started successfully (timeout reached as expected)."
             exit 0
           fi
+          echo "Dev server exited prematurely with code $status:"
           cat "$LOG_FILE"
-          exit "$status"
+          exit 1
         env:
           NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ci_placeholder
       - run: npm run build
