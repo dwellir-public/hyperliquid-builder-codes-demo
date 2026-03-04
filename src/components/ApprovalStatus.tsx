@@ -3,18 +3,25 @@
 import { useAccount } from "wagmi";
 import { DWELLIR_BUILDER_ADDRESS, feeToHuman } from "@/config/constants";
 import { useBuilderApproval } from "@/hooks/useBuilderApproval";
-import StepCard from "./StepCard";
 
-export default function ApprovalStatus() {
+interface ApprovalStatusProps {
+  onComplete: () => void;
+}
+
+export default function ApprovalStatus({ onComplete }: ApprovalStatusProps) {
   const { isConnected } = useAccount();
   const { data: maxFee, isLoading, error } = useBuilderApproval();
 
   return (
-    <StepCard
-      step={1}
-      title="Check Approval Status"
-      description="Query whether your wallet has approved the Dwellir builder address. This is a read-only call — no signing required."
-    >
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-base font-semibold">Check Approval Status</h2>
+        <p className="text-sm text-hl-muted mt-1">
+          Query whether your wallet has approved the Dwellir builder address. This is a read-only
+          call — no signing required.
+        </p>
+      </div>
+
       {!isConnected ? (
         <p className="text-sm text-hl-muted">Connect your wallet to check.</p>
       ) : isLoading ? (
@@ -22,7 +29,7 @@ export default function ApprovalStatus() {
       ) : error ? (
         <p className="text-sm text-hl-red">Error: {(error as Error).message}</p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <span
               className={`w-2.5 h-2.5 rounded-full ${
@@ -39,8 +46,15 @@ export default function ApprovalStatus() {
           <p className="text-xs text-hl-muted font-mono break-all">
             Builder: {DWELLIR_BUILDER_ADDRESS}
           </p>
+          <button
+            type="button"
+            onClick={onComplete}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-white hover:brightness-95 transition-colors"
+          >
+            Continue
+          </button>
         </div>
       )}
-    </StepCard>
+    </div>
   );
 }
