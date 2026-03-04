@@ -37,7 +37,8 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
 
   useEffect(() => {
     if (balance !== undefined && amount === "") {
-      setAmount(balance.toFixed(2));
+      const truncated = Math.floor(balance * 100) / 100;
+      setAmount(truncated.toFixed(2));
     }
   }, [balance, amount]);
 

@@ -13,11 +13,7 @@ interface WizardState {
   completedSteps: Set<string>;
 }
 
-type WizardAction =
-  | { type: "COMPLETE_STEP" }
-  | { type: "GO_TO_STEP"; index: number }
-  | { type: "INSERT_DEPOSIT_STEP" }
-  | { type: "REMOVE_DEPOSIT_STEP" };
+type WizardAction = { type: "COMPLETE_STEP" } | { type: "GO_TO_STEP"; index: number };
 
 const BASE_STEPS: WizardStep[] = [
   { id: "check-approval", label: "Check Approval" },
@@ -45,24 +41,6 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
       if (!state.completedSteps.has(targetId) && action.index !== state.currentStep) return state;
       return { ...state, currentStep: action.index };
     }
-    case "INSERT_DEPOSIT_STEP": {
-      if (state.steps[0]?.id === "deposit") return state;
-      return {
-        ...state,
-        steps: [DEPOSIT_STEP, ...state.steps],
-        currentStep: state.currentStep + 1,
-      };
-    }
-    case "REMOVE_DEPOSIT_STEP": {
-      const idx = state.steps.findIndex((s) => s.id === "deposit");
-      if (idx === -1 || state.completedSteps.has("deposit")) return state;
-      const steps = state.steps.filter((s) => s.id !== "deposit");
-      return {
-        ...state,
-        steps,
-        currentStep: Math.max(0, state.currentStep - 1),
-      };
-    }
   }
 }
 
@@ -85,8 +63,6 @@ export function useWizard(includeDeposit: boolean) {
     completedSteps: state.completedSteps,
     completeStep: () => dispatch({ type: "COMPLETE_STEP" }),
     goToStep: (index: number) => dispatch({ type: "GO_TO_STEP", index }),
-    insertDeposit: () => dispatch({ type: "INSERT_DEPOSIT_STEP" }),
-    removeDeposit: () => dispatch({ type: "REMOVE_DEPOSIT_STEP" }),
   };
 }
 
