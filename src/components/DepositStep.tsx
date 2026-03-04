@@ -80,8 +80,14 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
 
   const handleDeposit = () => {
     setTxError(null);
+    let parsedAmount: bigint;
+    try {
+      parsedAmount = parseUnits(amount, 6);
+    } catch {
+      setTxError("Invalid amount");
+      return;
+    }
     setStep("transferring");
-    const parsedAmount = parseUnits(amount, 6);
     transferUsdc({
       address: usdcAddress,
       abi: erc20Abi,
