@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAccount } from "wagmi";
 import { useAgentWallet } from "@/hooks/useAgentWallet";
 
@@ -13,8 +13,12 @@ export default function ActivateAgent({ onComplete }: ActivateAgentProps) {
   const { agentAddress, isAgentApproved, isApproving, approveAgent, deactivateAgent, error } =
     useAgentWallet();
 
+  // Track whether the agent was already approved when this step mounted,
+  // so we only auto-advance on a fresh activation — not on revisit.
+  const wasApprovedOnMount = useRef(isAgentApproved);
+
   useEffect(() => {
-    if (isAgentApproved) {
+    if (isAgentApproved && !wasApprovedOnMount.current) {
       onComplete();
     }
   }, [isAgentApproved, onComplete]);
@@ -35,13 +39,22 @@ export default function ActivateAgent({ onComplete }: ActivateAgentProps) {
         <div className="space-y-3">
           <p className="text-sm text-hl-green">Agent wallet active for this session</p>
           <p className="text-xs text-hl-muted font-mono break-all">Agent: {agentAddress}</p>
-          <button
-            type="button"
-            onClick={deactivateAgent}
-            className="px-4 py-2 text-sm font-medium rounded-lg border border-hl-red/50 text-hl-red hover:bg-hl-red/10 transition-colors"
-          >
-            Deactivate Agent
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onComplete}
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-white hover:brightness-95 transition-colors"
+            >
+              Continue
+            </button>
+            <button
+              type="button"
+              onClick={deactivateAgent}
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-hl-red/50 text-hl-red hover:bg-hl-red/10 transition-colors"
+            >
+              Deactivate Agent
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">
