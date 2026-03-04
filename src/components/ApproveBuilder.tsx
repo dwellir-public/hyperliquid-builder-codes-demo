@@ -1,15 +1,11 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { useQueryClient } from "@tanstack/react-query";
+import { DEFAULT_BUILDER_FEE, DWELLIR_BUILDER_ADDRESS, feeToPercent } from "@/config/constants";
 import { useHyperliquid } from "@/hooks/useHyperliquid";
 import { useNetwork } from "@/hooks/useNetwork";
-import {
-  DWELLIR_BUILDER_ADDRESS,
-  DEFAULT_BUILDER_FEE,
-  feeToPercent,
-} from "@/config/constants";
 import StepCard from "./StepCard";
 import TransactionResult from "./TransactionResult";
 
@@ -65,9 +61,7 @@ export default function ApproveBuilder() {
               onChange={(e) => setFee(Number(e.target.value))}
               className="w-20 bg-hl-bg border border-hl-border rounded px-2 py-1 text-sm font-mono focus:outline-none focus:border-hl-green"
             />
-            <span className="text-xs text-hl-muted">
-              = {feeToPercent(fee)}
-            </span>
+            <span className="text-xs text-hl-muted">= {feeToPercent(fee)}</span>
           </div>
           <button
             onClick={handleApprove}

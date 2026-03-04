@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { WagmiProvider } from "wagmi";
+import { darkTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
+import { type ReactNode, useState } from "react";
+import { WagmiProvider } from "wagmi";
 import "@rainbow-me/rainbowkit/styles.css";
 
-import { wagmiConfig } from "@/config/wagmi";
-import { NetworkContext } from "@/hooks/useNetwork";
-import { AgentWalletProviderInner } from "@/hooks/useAgentWallet";
 import type { NetworkKey } from "@/config/constants";
+import { wagmiConfig } from "@/config/wagmi";
+import { AgentWalletProviderInner } from "@/hooks/useAgentWallet";
+import { NetworkContext } from "@/hooks/useNetwork";
 
 const queryClient = new QueryClient();
 
@@ -27,9 +27,7 @@ export default function Providers({ children }: { children: ReactNode }) {
           })}
         >
           <NetworkContext.Provider value={{ network, setNetwork }}>
-            <AgentWalletProviderInner>
-              {children}
-            </AgentWalletProviderInner>
+            <AgentWalletProviderInner>{children}</AgentWalletProviderInner>
           </NetworkContext.Provider>
         </RainbowKitProvider>
       </QueryClientProvider>

@@ -1,27 +1,20 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-} from "react";
-import { useAccount } from "wagmi";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import type { Hex } from "viem";
 import type { WalletClient as HLWalletClient } from "@nktkas/hyperliquid";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { Hex } from "viem";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { useAccount } from "wagmi";
+import { createAgentWalletClient } from "@/lib/hyperliquid";
 import { useHyperliquid } from "./useHyperliquid";
 import { useNetwork } from "./useNetwork";
-import { createAgentWalletClient } from "@/lib/hyperliquid";
 
 const STORAGE_PREFIX = "hl-agent-key-";
 
 function loadAgentKey(userAddress: string): Hex | null {
   const storageKey = `${STORAGE_PREFIX}${userAddress.toLowerCase()}`;
   const stored = sessionStorage.getItem(storageKey);
-  if (stored && stored.startsWith("0x")) return stored as Hex;
+  if (stored?.startsWith("0x")) return stored as Hex;
   return null;
 }
 
@@ -150,14 +143,18 @@ export function AgentWalletProviderInner({ children }: { children: React.ReactNo
       deactivateAgent,
       error,
     }),
-    [agentWalletClient, agentAccount, isApproved, isApproving, approveAgent, deactivateAgent, error]
+    [
+      agentWalletClient,
+      agentAccount,
+      isApproved,
+      isApproving,
+      approveAgent,
+      deactivateAgent,
+      error,
+    ],
   );
 
-  return (
-    <AgentWalletContext.Provider value={value}>
-      {children}
-    </AgentWalletContext.Provider>
-  );
+  return <AgentWalletContext.Provider value={value}>{children}</AgentWalletContext.Provider>;
 }
 
 /**

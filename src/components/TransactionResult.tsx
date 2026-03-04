@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { parseHLResult, type ResultContext } from "@/lib/parseHLResult";
 
 interface TransactionResultProps {
@@ -14,18 +14,38 @@ const FADE_DURATION_MS = 500;
 
 const ICONS = {
   success: (
-    <svg className="w-4 h-4 text-hl-green flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className="w-4 h-4 text-hl-green flex-shrink-0"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
     </svg>
   ),
   error: (
-    <svg className="w-4 h-4 text-hl-red flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className="w-4 h-4 text-hl-red flex-shrink-0"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
   ),
   info: (
-    <svg className="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <svg
+      className="w-4 h-4 text-blue-400 flex-shrink-0"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
     </svg>
   ),
 };
@@ -34,11 +54,7 @@ const ICONS = {
  * Inner component that manages its own fade lifecycle.
  * Keyed by content identity so it remounts on new results.
  */
-function ResultBubble({
-  result,
-  error,
-  context,
-}: TransactionResultProps) {
+function ResultBubble({ result, error, context }: TransactionResultProps) {
   const [fading, setFading] = useState(false);
   const [hidden, setHidden] = useState(false);
 
@@ -56,16 +72,12 @@ function ResultBubble({
       clearTimeout(hideTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [context, error, result]);
 
   if (hidden) return null;
 
   const rawJson =
-    result != null
-      ? typeof result === "string"
-        ? result
-        : JSON.stringify(result, null, 2)
-      : null;
+    result != null ? (typeof result === "string" ? result : JSON.stringify(result, null, 2)) : null;
 
   return (
     <div
@@ -128,16 +140,7 @@ export default function TransactionResult({
 
   // Key by content identity so the inner component remounts on new results,
   // giving it a fresh animation and auto-dismiss timer.
-  const contentKey =
-    (result != null ? JSON.stringify(result) : "") +
-    (error ?? "");
+  const contentKey = (result != null ? JSON.stringify(result) : "") + (error ?? "");
 
-  return (
-    <ResultBubble
-      key={contentKey}
-      result={result}
-      error={error}
-      context={context}
-    />
-  );
+  return <ResultBubble key={contentKey} result={result} error={error} context={context} />;
 }

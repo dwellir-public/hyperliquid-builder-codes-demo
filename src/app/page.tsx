@@ -1,20 +1,20 @@
 "use client";
 
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import Header from "@/components/Header";
+import AccountPanel from "@/components/AccountPanel";
+import ActivateAgent from "@/components/ActivateAgent";
 import ApprovalStatus from "@/components/ApprovalStatus";
 import ApproveBuilder from "@/components/ApproveBuilder";
-import ActivateAgent from "@/components/ActivateAgent";
-import PlaceOrder from "@/components/PlaceOrder";
-import MarketOrder from "@/components/MarketOrder";
-import RevokeApproval from "@/components/RevokeApproval";
-import AccountPanel from "@/components/AccountPanel";
-import { useBuilderApproval } from "@/hooks/useBuilderApproval";
-import { useAgentWallet } from "@/hooks/useAgentWallet";
-import { DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
 import BuilderIncomeBar from "@/components/BuilderIncomeBar";
+import Header from "@/components/Header";
+import MarketOrder from "@/components/MarketOrder";
+import PlaceOrder from "@/components/PlaceOrder";
+import RevokeApproval from "@/components/RevokeApproval";
+import { DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
+import { useAgentWallet } from "@/hooks/useAgentWallet";
+import { useBuilderApproval } from "@/hooks/useBuilderApproval";
 
 function ConnectHero() {
   return (
@@ -23,18 +23,15 @@ function ConnectHero() {
         <div className="space-y-3">
           <h1 className="text-3xl font-bold">Builder Codes Demo</h1>
           <p className="text-hl-muted">
-            Walk through the complete Hyperliquid builder code lifecycle: approve
-            a builder, place orders with builder fees, and revoke approval.
+            Walk through the complete Hyperliquid builder code lifecycle: approve a builder, place
+            orders with builder fees, and revoke approval.
           </p>
         </div>
 
         <div className="bg-hl-card border border-hl-border rounded-xl p-6 space-y-4">
-          <p className="text-sm font-medium">
-            Connect your wallet to get started
-          </p>
+          <p className="text-sm font-medium">Connect your wallet to get started</p>
           <p className="text-xs text-hl-muted">
-            You'll need a wallet (e.g. MetaMask) configured for Arbitrum
-            mainnet.
+            You'll need a wallet (e.g. MetaMask) configured for Arbitrum mainnet.
           </p>
           <ConnectButton.Custom>
             {({ openConnectModal, mounted }) => (
@@ -64,9 +61,7 @@ function ConnectHero() {
           </div>
         </div>
 
-        <p className="text-xs text-hl-muted font-mono">
-          Builder: {DWELLIR_BUILDER_ADDRESS}
-        </p>
+        <p className="text-xs text-hl-muted font-mono">Builder: {DWELLIR_BUILDER_ADDRESS}</p>
       </div>
     </div>
   );
@@ -90,12 +85,8 @@ export default function Home() {
       ) : (
         <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 space-y-6">
           <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold mb-2">
-              Builder Codes Workflow
-            </h1>
-            <p className="text-xs text-hl-muted font-mono">
-              Builder: {DWELLIR_BUILDER_ADDRESS}
-            </p>
+            <h1 className="text-2xl font-bold mb-2">Builder Codes Workflow</h1>
+            <p className="text-xs text-hl-muted font-mono">Builder: {DWELLIR_BUILDER_ADDRESS}</p>
           </div>
 
           <AccountPanel />

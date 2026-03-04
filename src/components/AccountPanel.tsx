@@ -2,15 +2,11 @@
 
 import { useState } from "react";
 import { useAccountState } from "@/hooks/useAccountState";
-import { useOpenOrders } from "@/hooks/useOpenOrders";
 import { useBuilderApproval } from "@/hooks/useBuilderApproval";
+import { useOpenOrders } from "@/hooks/useOpenOrders";
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse bg-hl-border/50 rounded ${className}`}
-    />
-  );
+  return <div className={`animate-pulse bg-hl-border/50 rounded ${className}`} />;
 }
 
 export default function AccountPanel() {
@@ -38,9 +34,7 @@ export default function AccountPanel() {
         <h2 className="text-sm font-semibold">Account Overview</h2>
         <span
           className={`text-xs px-2 py-0.5 rounded-full ${
-            isApproved
-              ? "bg-hl-green/15 text-hl-green"
-              : "bg-hl-red/15 text-hl-red"
+            isApproved ? "bg-hl-green/15 text-hl-green" : "bg-hl-red/15 text-hl-red"
           }`}
         >
           {isApproved ? "Builder Approved" : "Not Approved"}
@@ -84,17 +78,11 @@ export default function AccountPanel() {
                   className="flex items-center justify-between text-xs font-mono bg-hl-bg rounded px-3 py-1.5"
                 >
                   <span className="font-medium">{pos.coin}</span>
-                  <span
-                    className={
-                      pos.side === "Long" ? "text-hl-green" : "text-hl-red"
-                    }
-                  >
+                  <span className={pos.side === "Long" ? "text-hl-green" : "text-hl-red"}>
                     {pos.side}
                   </span>
                   <span>{pos.size}</span>
-                  <span className="text-hl-muted">
-                    @{parseFloat(pos.entryPx).toFixed(2)}
-                  </span>
+                  <span className="text-hl-muted">@{parseFloat(pos.entryPx).toFixed(2)}</span>
                   <span className={pnl >= 0 ? "text-hl-green" : "text-hl-red"}>
                     {pnl >= 0 ? "+" : ""}
                     {pnl.toFixed(2)}
@@ -117,17 +105,11 @@ export default function AccountPanel() {
                 className="flex items-center justify-between text-xs font-mono bg-hl-bg rounded px-3 py-1.5"
               >
                 <span className="font-medium">{order.coin}</span>
-                <span
-                  className={
-                    order.side === "B" ? "text-hl-green" : "text-hl-red"
-                  }
-                >
+                <span className={order.side === "B" ? "text-hl-green" : "text-hl-red"}>
                   {order.side === "B" ? "Buy" : "Sell"}
                 </span>
                 <span>{order.sz}</span>
-                <span className="text-hl-muted">
-                  @{parseFloat(order.limitPx).toFixed(2)}
-                </span>
+                <span className="text-hl-muted">@{parseFloat(order.limitPx).toFixed(2)}</span>
                 <button
                   onClick={() => handleCancel(order.coin, order.oid)}
                   disabled={cancellingOid === order.oid}

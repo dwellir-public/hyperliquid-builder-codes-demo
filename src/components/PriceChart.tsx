@@ -1,14 +1,14 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
 import {
+  type CandlestickData,
+  CandlestickSeries,
+  ColorType,
   createChart,
   type IChartApi,
   type ISeriesApi,
-  type CandlestickData,
-  ColorType,
-  CandlestickSeries,
 } from "lightweight-charts";
+import { useEffect, useRef, useState } from "react";
 import { useCandleData } from "@/hooks/useCandleData";
 
 const INTERVALS = ["1h", "4h", "1d"] as const;
@@ -88,7 +88,7 @@ export default function PriceChart({ coin }: PriceChartProps) {
 
     // Live update: just update the last candle
     const lastCandle = candles[candles.length - 1];
-    seriesRef.current!.update(lastCandle as unknown as CandlestickData);
+    seriesRef.current?.update(lastCandle as unknown as CandlestickData);
   }, [candles, coin, interval]);
 
   // Cleanup on unmount
@@ -121,22 +121,15 @@ export default function PriceChart({ coin }: PriceChartProps) {
             key={iv}
             onClick={() => setInterval(iv)}
             className={`px-2 py-0.5 text-xs rounded ${
-              interval === iv
-                ? "bg-hl-green/20 text-hl-green"
-                : "text-hl-muted hover:text-white"
+              interval === iv ? "bg-hl-green/20 text-hl-green" : "text-hl-muted hover:text-white"
             }`}
           >
             {iv}
           </button>
         ))}
-        <span className="ml-auto text-xs text-hl-muted">
-          {coin}/USD
-        </span>
+        <span className="ml-auto text-xs text-hl-muted">{coin}/USD</span>
       </div>
-      <div
-        ref={chartContainerRef}
-        className="rounded-lg overflow-hidden border border-hl-border"
-      >
+      <div ref={chartContainerRef} className="rounded-lg overflow-hidden border border-hl-border">
         {isLoading && !chartRef.current && (
           <div className="h-[300px] flex items-center justify-center text-hl-muted text-sm">
             Loading chart...

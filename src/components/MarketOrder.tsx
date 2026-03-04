@@ -1,16 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import dynamic from "next/dynamic";
+import { useState } from "react";
 import { useAccount } from "wagmi";
-import { useAgentWallet } from "@/hooks/useAgentWallet";
-import { useAllMids, useMeta } from "@/hooks/useMarketData";
+import { DEFAULT_BUILDER_FEE, DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
 import { useAccountState } from "@/hooks/useAccountState";
-import {
-  DWELLIR_BUILDER_ADDRESS,
-  DEFAULT_BUILDER_FEE,
-} from "@/config/constants";
+import { useAgentWallet } from "@/hooks/useAgentWallet";
 import { useBBO } from "@/hooks/useDwellirL2Book";
+import { useAllMids, useMeta } from "@/hooks/useMarketData";
 import StepCard from "./StepCard";
 import TransactionResult from "./TransactionResult";
 
@@ -52,13 +49,11 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
       ? midPrice * (1 + SLIPPAGE)
       : midPrice * (1 - SLIPPAGE)
     : null;
-  const estimatedCost = midPrice
-    ? (parseFloat(size) * midPrice).toFixed(2)
-    : null;
+  const estimatedCost = midPrice ? (parseFloat(size) * midPrice).toFixed(2) : null;
 
   const validateSize = (): string | null => {
     const s = parseFloat(size);
-    if (isNaN(s) || s <= 0) return "Size must be positive";
+    if (Number.isNaN(s) || s <= 0) return "Size must be positive";
     if (szDecimals !== undefined) {
       const parts = size.split(".");
       if (parts[1] && parts[1].length > szDecimals) {
@@ -144,9 +139,7 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
 
   const allCoins = meta?.universe.map((a) => a.name) ?? [];
   const filteredCoins = coinSearch
-    ? allCoins.filter((c) =>
-        c.toLowerCase().includes(coinSearch.toLowerCase())
-      )
+    ? allCoins.filter((c) => c.toLowerCase().includes(coinSearch.toLowerCase()))
     : allCoins;
 
   return (
@@ -165,9 +158,7 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
           {account && (
             <p className="text-xs text-hl-muted">
               Balance: ${account.balance.toFixed(2)} USDC
-              {estimatedCost && (
-                <> | Est. cost: ${estimatedCost}</>
-              )}
+              {estimatedCost && <> | Est. cost: ${estimatedCost}</>}
             </p>
           )}
 
@@ -180,7 +171,7 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
                 onChange={(e) => {
                   setCoinSearch(e.target.value);
                   const match = allCoins.find(
-                    (c) => c.toLowerCase() === e.target.value.toLowerCase()
+                    (c) => c.toLowerCase() === e.target.value.toLowerCase(),
                   );
                   if (match) {
                     setCoin(match);
@@ -221,9 +212,7 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
                     : "border-hl-border focus:border-hl-green"
                 }`}
               />
-              {sizeError && (
-                <p className="text-xs text-hl-red mt-0.5">{sizeError}</p>
-              )}
+              {sizeError && <p className="text-xs text-hl-red mt-0.5">{sizeError}</p>}
             </div>
           </div>
 
@@ -259,9 +248,7 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
             </button>
           ) : (
             <div className="bg-hl-red/5 border border-hl-red/30 rounded-lg p-3 space-y-2">
-              <p className="text-sm font-medium text-white">
-                Confirm Market Order
-              </p>
+              <p className="text-sm font-medium text-white">Confirm Market Order</p>
               <p className="text-xs text-hl-muted">
                 {isBuy ? "Buy" : "Sell"} {size} {coin} at ~$
                 {iocPrice?.toPrecision(6)} (IOC)
@@ -286,16 +273,14 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
           )}
 
           <p className="text-xs text-hl-muted">
-            Warning: This will execute immediately if there is sufficient
-            liquidity. Real funds will be used.
+            Warning: This will execute immediately if there is sufficient liquidity. Real funds will
+            be used.
           </p>
           <TransactionResult result={result} error={error} context="order" />
 
           {/* Positions */}
           <div className="border-t border-hl-border pt-3 mt-4">
-            <h4 className="text-xs font-medium text-hl-muted mb-2">
-              Positions
-            </h4>
+            <h4 className="text-xs font-medium text-hl-muted mb-2">Positions</h4>
             {!account ? (
               <p className="text-xs text-hl-muted">Loading...</p>
             ) : account.positions.length === 0 ? (
@@ -324,18 +309,18 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
                           <td className="px-3 py-2 font-medium">{pos.coin}</td>
                           <td
                             className={`px-3 py-2 ${
-                              pos.side === "Long"
-                                ? "text-hl-green"
-                                : "text-hl-red"
+                              pos.side === "Long" ? "text-hl-green" : "text-hl-red"
                             }`}
                           >
                             {pos.side}
                           </td>
+                          <td className="px-3 py-2 text-right font-mono">{pos.size}</td>
                           <td className="px-3 py-2 text-right font-mono">
-                            {pos.size}
-                          </td>
-                          <td className="px-3 py-2 text-right font-mono">
-                            ${parseFloat(pos.entryPx).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            $
+                            {parseFloat(pos.entryPx).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </td>
                           <td
                             className={`px-3 py-2 text-right font-mono ${
@@ -351,9 +336,7 @@ export default function MarketOrder({ coin, setCoin, locked }: MarketOrderProps)
                               disabled={closingCoin === pos.coin}
                               className="px-2 py-1 text-xs font-medium rounded border border-hl-red/50 text-hl-red hover:bg-hl-red/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
-                              {closingCoin === pos.coin
-                                ? "Closing..."
-                                : "Close"}
+                              {closingCoin === pos.coin ? "Closing..." : "Close"}
                             </button>
                           </td>
                         </tr>

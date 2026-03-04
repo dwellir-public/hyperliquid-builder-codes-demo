@@ -5,10 +5,7 @@ export interface ParsedResult {
   message: string;
 }
 
-export function parseHLResult(
-  result: unknown,
-  context: ResultContext
-): ParsedResult {
+export function parseHLResult(result: unknown, context: ResultContext): ParsedResult {
   if (result == null) {
     return { icon: "info", message: "No response received." };
   }

@@ -1,8 +1,4 @@
-import {
-  PublicClient,
-  WalletClient as HLWalletClient,
-  HttpTransport,
-} from "@nktkas/hyperliquid";
+import { WalletClient as HLWalletClient, HttpTransport, PublicClient } from "@nktkas/hyperliquid";
 import type { WalletClient } from "viem";
 import type { NetworkKey } from "@/config/constants";
 import { NETWORKS } from "@/config/constants";
@@ -19,10 +15,7 @@ export function createPublicClient(network: NetworkKey): PublicClient {
 }
 
 /** Create a WalletClient (signing) wired to a viem WalletClient. */
-export function createWalletClient(
-  network: NetworkKey,
-  wallet: WalletClient
-): HLWalletClient {
+export function createWalletClient(network: NetworkKey, wallet: WalletClient): HLWalletClient {
   const transport = new HttpTransport({ url: TRANSPORT_URLS[network] });
   const isTestnet = NETWORKS[network].isTestnet;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,7 +38,7 @@ export function createAgentWalletClient(network: NetworkKey, account: any): HLWa
 export async function queryMaxBuilderFee(
   network: NetworkKey,
   user: string,
-  builder: string
+  builder: string,
 ): Promise<number> {
   const { infoUrl } = NETWORKS[network];
   const resp = await fetch(infoUrl, {
@@ -62,9 +55,7 @@ export async function queryMaxBuilderFee(
 }
 
 /** Fetch all mid prices (uses public HL API — not available on Dwellir info). */
-export async function fetchAllMids(
-  network: NetworkKey
-): Promise<Record<string, string>> {
+export async function fetchAllMids(network: NetworkKey): Promise<Record<string, string>> {
   const { publicInfoUrl } = NETWORKS[network];
   const resp = await fetch(publicInfoUrl, {
     method: "POST",
@@ -77,7 +68,7 @@ export async function fetchAllMids(
 
 /** Fetch perps metadata to get asset indices. */
 export async function fetchMeta(
-  network: NetworkKey
+  network: NetworkKey,
 ): Promise<{ universe: Array<{ name: string; szDecimals: number }> }> {
   const { infoUrl } = NETWORKS[network];
   const resp = await fetch(infoUrl, {
@@ -92,7 +83,7 @@ export async function fetchMeta(
 /** Fetch clearinghouse state for a user (balance, equity, positions). */
 export async function fetchClearinghouseState(
   network: NetworkKey,
-  user: string
+  user: string,
 ): Promise<{
   withdrawable: string;
   crossMarginSummary: { accountValue: string };
@@ -118,7 +109,7 @@ export async function fetchClearinghouseState(
 /** Fetch open orders for a user. */
 export async function fetchOpenOrders(
   network: NetworkKey,
-  user: string
+  user: string,
 ): Promise<
   Array<{
     coin: string;
@@ -142,7 +133,7 @@ export async function fetchOpenOrders(
 /** Fetch user fills (trade history — uses public HL API). */
 export async function fetchUserFills(
   network: NetworkKey,
-  user: string
+  user: string,
 ): Promise<
   Array<{
     coin: string;
@@ -165,7 +156,7 @@ export async function fetchUserFills(
 /** Fetch referral/builder data for a user (uses public HL API — not available on Dwellir info). */
 export async function fetchReferral(
   network: NetworkKey,
-  user: string
+  user: string,
 ): Promise<{
   cumVlm: string;
   unclaimedRewards: string;
@@ -187,10 +178,8 @@ export async function fetchCandleSnapshot(
   network: NetworkKey,
   coin: string,
   interval: string,
-  startTime: number
-): Promise<
-  Array<{ t: number; o: string; h: string; l: string; c: string; v: string }>
-> {
+  startTime: number,
+): Promise<Array<{ t: number; o: string; h: string; l: string; c: string; v: string }>> {
   const { publicInfoUrl } = NETWORKS[network];
   const resp = await fetch(publicInfoUrl, {
     method: "POST",

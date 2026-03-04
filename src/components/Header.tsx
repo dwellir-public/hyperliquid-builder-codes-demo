@@ -6,23 +6,12 @@ export default function Header() {
   return (
     <header className="flex items-center justify-between px-6 py-4 border-b border-hl-border">
       <div className="flex items-center gap-3">
-        <h1 className="text-lg font-bold tracking-tight font-heading">
-          Hyperliquid Builder Codes
-        </h1>
-        <span className="text-xs text-hl-muted bg-hl-card px-2 py-0.5 rounded">
-          Demo
-        </span>
+        <h1 className="text-lg font-bold tracking-tight font-heading">Hyperliquid Builder Codes</h1>
+        <span className="text-xs text-hl-muted bg-hl-card px-2 py-0.5 rounded">Demo</span>
       </div>
       <div className="flex items-center gap-3">
         <ConnectButton.Custom>
-          {({
-            account,
-            chain,
-            openAccountModal,
-            openChainModal,
-            openConnectModal,
-            mounted,
-          }) => {
+          {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
             const ready = mounted;
             const connected = ready && account && chain;
 
@@ -66,9 +55,7 @@ export default function Header() {
                       className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-hl-border hover:border-hl-muted transition-colors"
                     >
                       <span className="w-2 h-2 rounded-full bg-hl-green" />
-                      <span className="font-mono text-xs">
-                        {account.displayName}
-                      </span>
+                      <span className="font-mono text-xs">{account.displayName}</span>
                     </button>
                   );
                 })()}

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
-import { useNetwork } from "./useNetwork";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NETWORKS } from "@/config/constants";
+import { useNetwork } from "./useNetwork";
 
 export interface L2Update {
   coin: string;
@@ -18,10 +18,7 @@ export interface L2Update {
  * and calls `onUpdate` with the midpoint computed from best bid/ask.
  * Reconnects with exponential backoff on disconnect.
  */
-export function useDwellirL2Book(
-  coin: string,
-  onUpdate: (update: L2Update) => void
-) {
+export function useDwellirL2Book(coin: string, onUpdate: (update: L2Update) => void) {
   const { network } = useNetwork();
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
@@ -44,7 +41,7 @@ export function useDwellirL2Book(
           JSON.stringify({
             method: "subscribe",
             subscription: { type: "l2Book", coin, nSigFigs: 5 },
-          })
+          }),
         );
       };
 

@@ -1,10 +1,7 @@
-export const DWELLIR_BUILDER_ADDRESS =
-  (process.env.NEXT_PUBLIC_BUILDER_ADDRESS ??
-    "0xE94D5a0a377Afe26a461e8aAC2c7189D2006c8b9") as `0x${string}`;
+export const DWELLIR_BUILDER_ADDRESS = (process.env.NEXT_PUBLIC_BUILDER_ADDRESS ??
+  "0xE94D5a0a377Afe26a461e8aAC2c7189D2006c8b9") as `0x${string}`;
 
-export const DEFAULT_BUILDER_FEE = Number(
-  process.env.NEXT_PUBLIC_BUILDER_FEE ?? 10
-); // default: 1 bps = 0.01%
+export const DEFAULT_BUILDER_FEE = Number(process.env.NEXT_PUBLIC_BUILDER_FEE ?? 10); // default: 1 bps = 0.01%
 
 const DWELLIR_API_KEY = process.env.NEXT_PUBLIC_DWELLIR_API_KEY;
 

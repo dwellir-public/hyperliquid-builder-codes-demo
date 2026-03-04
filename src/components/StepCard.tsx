@@ -30,12 +30,7 @@ export default function StepCard({
       <div className="flex items-start gap-4 mb-4">
         <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-hl-green/10 text-hl-green text-sm font-bold">
           {completed ? (
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -68,9 +63,7 @@ export default function StepCard({
           </p>
         </div>
       </div>
-      <div className={`ml-12 ${locked ? "pointer-events-none" : ""}`}>
-        {children}
-      </div>
+      <div className={`ml-12 ${locked ? "pointer-events-none" : ""}`}>{children}</div>
     </div>
   );
 }
