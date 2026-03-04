@@ -70,8 +70,6 @@ function ConnectHero() {
 
 function WizardFlow() {
   const { data: account, isLoading: isAccountLoading } = useAccountState();
-  const hasBalance = account ? account.balance > 0 : false;
-  const wizard = useWizard(!hasBalance);
 
   if (isAccountLoading) {
     return (
@@ -80,6 +78,13 @@ function WizardFlow() {
       </main>
     );
   }
+
+  const hasBalance = account ? account.balance > 0 : false;
+  return <WizardContent includeDeposit={!hasBalance} />;
+}
+
+function WizardContent({ includeDeposit }: { includeDeposit: boolean }) {
+  const wizard = useWizard(includeDeposit);
 
   const renderStep = () => {
     switch (wizard.currentStepId) {
