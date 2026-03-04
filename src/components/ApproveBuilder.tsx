@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { DEFAULT_BUILDER_FEE, DWELLIR_BUILDER_ADDRESS, feeToPercent } from "@/config/constants";
+import { useBuilderApproval } from "@/hooks/useBuilderApproval";
 import { useHyperliquid } from "@/hooks/useHyperliquid";
 import { useNetwork } from "@/hooks/useNetwork";
 import TransactionResult from "./TransactionResult";
@@ -17,6 +18,9 @@ export default function ApproveBuilder({ onComplete }: ApproveBuilderProps) {
   const { walletClient } = useHyperliquid();
   const { network } = useNetwork();
   const queryClient = useQueryClient();
+
+  const { data: maxFee } = useBuilderApproval();
+  const isAlreadyApproved = maxFee !== undefined && maxFee > 0;
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<unknown>(null);
@@ -57,6 +61,23 @@ export default function ApproveBuilder({ onComplete }: ApproveBuilderProps) {
 
       {!isConnected ? (
         <p className="text-sm text-hl-muted">Connect your wallet first.</p>
+      ) : isAlreadyApproved ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-hl-green" />
+            <span className="text-sm font-medium">Already approved</span>
+          </div>
+          <p className="text-sm text-hl-muted">
+            Max approved fee: {feeToPercent(DEFAULT_BUILDER_FEE)}
+          </p>
+          <button
+            type="button"
+            onClick={onComplete}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-white hover:brightness-95 transition-colors"
+          >
+            Continue
+          </button>
+        </div>
       ) : (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
