@@ -14,6 +14,8 @@ import RevokeApproval from "@/components/RevokeApproval";
 import WizardShell from "@/components/WizardShell";
 import { DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
 import { useAccountState } from "@/hooks/useAccountState";
+import { useAgentWallet } from "@/hooks/useAgentWallet";
+import { useBuilderApproval } from "@/hooks/useBuilderApproval";
 import { useWizard } from "@/hooks/useWizard";
 
 function ConnectHero() {
@@ -70,8 +72,10 @@ function ConnectHero() {
 
 function WizardFlow() {
   const { data: account, isLoading: isAccountLoading } = useAccountState();
+  const { data: maxFee, isLoading: isApprovalLoading } = useBuilderApproval();
+  const { isAgentApproved } = useAgentWallet();
 
-  if (isAccountLoading) {
+  if (isAccountLoading || isApprovalLoading) {
     return (
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
         <p className="text-center text-sm text-hl-muted">Loading account state...</p>
@@ -80,11 +84,30 @@ function WizardFlow() {
   }
 
   const hasBalance = account ? account.balance > 0 : false;
-  return <WizardContent includeDeposit={!hasBalance} />;
+  const isApproved = maxFee != null && maxFee > 0;
+
+  const preCompleted: string[] = [];
+  if (isApproved) {
+    preCompleted.push("check-approval", "approve-builder");
+  }
+  if (hasBalance) {
+    preCompleted.push("deposit");
+  }
+  if (isAgentApproved) {
+    preCompleted.push("activate-agent");
+  }
+
+  return <WizardContent includeDeposit={!hasBalance} preCompleted={preCompleted} />;
 }
 
-function WizardContent({ includeDeposit }: { includeDeposit: boolean }) {
-  const wizard = useWizard(includeDeposit);
+function WizardContent({
+  includeDeposit,
+  preCompleted,
+}: {
+  includeDeposit: boolean;
+  preCompleted: string[];
+}) {
+  const wizard = useWizard({ includeDeposit, preCompleted });
 
   const renderStep = () => {
     switch (wizard.currentStepId) {

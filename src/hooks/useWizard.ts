@@ -47,19 +47,33 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
   }
 }
 
-function init(includeDeposit: boolean): WizardState {
-  const steps = includeDeposit
-    ? [...PRE_DEPOSIT_STEPS, DEPOSIT_STEP, ...POST_DEPOSIT_STEPS]
-    : [...PRE_DEPOSIT_STEPS, ...POST_DEPOSIT_STEPS];
-  return {
-    steps,
-    currentStep: 0,
-    completedSteps: new Set<string>(),
-  };
+interface WizardOptions {
+  includeDeposit: boolean;
+  preCompleted?: string[];
 }
 
-export function useWizard(includeDeposit: boolean) {
-  const [state, dispatch] = useReducer(reducer, includeDeposit, init);
+function init(options: WizardOptions): WizardState {
+  const steps = options.includeDeposit
+    ? [...PRE_DEPOSIT_STEPS, DEPOSIT_STEP, ...POST_DEPOSIT_STEPS]
+    : [...PRE_DEPOSIT_STEPS, ...POST_DEPOSIT_STEPS];
+
+  const completedSteps = new Set<string>(options.preCompleted ?? []);
+
+  // Advance currentStep past all pre-completed steps
+  let currentStep = 0;
+  while (currentStep < steps.length && completedSteps.has(steps[currentStep].id)) {
+    currentStep++;
+  }
+  // Clamp to last step if everything is completed
+  if (currentStep >= steps.length) {
+    currentStep = steps.length - 1;
+  }
+
+  return { steps, currentStep, completedSteps };
+}
+
+export function useWizard(options: WizardOptions) {
+  const [state, dispatch] = useReducer(reducer, options, init);
 
   return {
     steps: state.steps,
