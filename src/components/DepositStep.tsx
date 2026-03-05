@@ -26,7 +26,7 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
   const { network } = useNetwork();
   const { data: account } = useAccountState();
   const [amount, setAmount] = useState("");
-  const [step, setStep] = useState<"idle" | "transferring" | "waiting">("idle");
+  const [step, setStep] = useState<"idle" | "transferring" | "waiting" | "success">("idle");
   const [txError, setTxError] = useState<string | null>(null);
 
   const usdcAddress = USDC_ADDRESS[network];
@@ -75,12 +75,14 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
     }
   }, [balance, amount]);
 
-  // Auto-complete when HL balance appears
+  // Show success state when HL balance appears, then advance after a delay
   useEffect(() => {
-    if (account && account.balance > 0) {
-      onComplete();
+    if (account && account.balance > 0 && step !== "success") {
+      setStep("success");
+      const timer = setTimeout(() => onComplete(), 2500);
+      return () => clearTimeout(timer);
     }
-  }, [account, onComplete]);
+  }, [account, step, onComplete]);
 
   // Transfer to Bridge2 (direct ERC-20 transfer, no approve needed)
   const {
@@ -150,7 +152,23 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
         </p>
       </div>
 
-      {balance === undefined || ethBalance === undefined ? (
+      {step === "success" ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-hl-green" />
+            <span className="text-sm font-medium text-hl-green">
+              Deposit confirmed — ${account?.balance.toFixed(2)} available on Hyperliquid
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onComplete}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-green text-white hover:brightness-95 transition-colors"
+          >
+            Continue
+          </button>
+        </div>
+      ) : balance === undefined || ethBalance === undefined ? (
         <p className="text-sm text-hl-muted">Checking Arbitrum balances...</p>
       ) : hasEnoughUsdc && hasEnoughGas ? (
         <DepositForm
@@ -203,7 +221,7 @@ function DepositForm({
   setAmount: (v: string) => void;
   isValidAmount: boolean;
   parsedAmount: number;
-  step: "idle" | "transferring" | "waiting";
+  step: "idle" | "transferring" | "waiting" | "success";
   isTransferPending: boolean;
   txError: string | null;
   setTxError: (v: string | null) => void;

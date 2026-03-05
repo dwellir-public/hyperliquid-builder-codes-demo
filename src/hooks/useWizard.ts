@@ -15,15 +15,18 @@ interface WizardState {
 
 type WizardAction = { type: "COMPLETE_STEP" } | { type: "GO_TO_STEP"; index: number };
 
-const BASE_STEPS: WizardStep[] = [
+const PRE_DEPOSIT_STEPS: WizardStep[] = [
   { id: "check-approval", label: "Check Approval" },
   { id: "approve-builder", label: "Approve Builder" },
+];
+
+const DEPOSIT_STEP: WizardStep = { id: "deposit", label: "Deposit USDC" };
+
+const POST_DEPOSIT_STEPS: WizardStep[] = [
   { id: "activate-agent", label: "Activate Agent" },
   { id: "place-order", label: "Place Order" },
   { id: "revoke", label: "Revoke Approval" },
 ];
-
-const DEPOSIT_STEP: WizardStep = { id: "deposit", label: "Deposit USDC" };
 
 function reducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
@@ -45,7 +48,9 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
 }
 
 function init(includeDeposit: boolean): WizardState {
-  const steps = includeDeposit ? [DEPOSIT_STEP, ...BASE_STEPS] : [...BASE_STEPS];
+  const steps = includeDeposit
+    ? [...PRE_DEPOSIT_STEPS, DEPOSIT_STEP, ...POST_DEPOSIT_STEPS]
+    : [...PRE_DEPOSIT_STEPS, ...POST_DEPOSIT_STEPS];
   return {
     steps,
     currentStep: 0,
