@@ -55,4 +55,5 @@ export const USDC_ADDRESS = {
   testnet: "0x1baAbB04529D43a73232B713C0FE471f7c7334d5" as `0x${string}`,
 };
 
-export const MIN_DEPOSIT_USDC = 5;
+export const MIN_DEPOSIT_USDC = 10;
+export const MIN_ORDER_USDC = 10;

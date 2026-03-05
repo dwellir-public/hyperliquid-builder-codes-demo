@@ -1,79 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { erc20Abi, formatEther, formatUnits, parseUnits } from "viem";
-import {
-  useAccount,
-  useBalance,
-  useGasPrice,
-  useReadContract,
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
-import { BRIDGE2_ADDRESS, MIN_DEPOSIT_USDC, USDC_ADDRESS } from "@/config/constants";
+import { useEffect } from "react";
+import { MIN_DEPOSIT_USDC } from "@/config/constants";
 import { useAccountState } from "@/hooks/useAccountState";
-import { useNetwork } from "@/hooks/useNetwork";
-
-// ERC-20 transfer gas limit (generous estimate)
-const TRANSFER_GAS_LIMIT = BigInt(65_000);
+import { useDeposit } from "@/hooks/useDeposit";
 
 interface DepositStepProps {
   onComplete: () => void;
 }
 
 export default function DepositStep({ onComplete }: DepositStepProps) {
-  const { address } = useAccount();
-  const { network } = useNetwork();
   const { data: account } = useAccountState();
-  const [amount, setAmount] = useState("");
-  const [step, setStep] = useState<"idle" | "transferring" | "waiting" | "success">("idle");
-  const [txError, setTxError] = useState<string | null>(null);
+  const deposit = useDeposit();
 
-  const usdcAddress = USDC_ADDRESS[network];
-  const bridgeAddress = BRIDGE2_ADDRESS[network];
-  const chainId = network === "mainnet" ? 42161 : 421614;
-
-  // USDC balance
-  const { data: rawBalance, refetch: refetchBalance } = useReadContract({
-    address: usdcAddress,
-    abi: erc20Abi,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
+  const {
+    amount,
+    setAmount,
+    step,
+    setStep,
+    txError,
+    setTxError,
+    balance,
+    ethBalance,
+    hasEnoughUsdc,
+    hasEnoughGas,
+    gasDisplay,
+    isValidAmount,
+    parsedAmount,
+    isTransferPending,
+    handleDeposit,
     chainId,
-    query: { enabled: !!address, refetchInterval: 10_000 },
-  });
-
-  const balance = rawBalance !== undefined ? Number(formatUnits(rawBalance, 6)) : undefined;
-  const hasEnoughUsdc = balance !== undefined && balance >= MIN_DEPOSIT_USDC;
-
-  // ETH balance for gas
-  const { data: ethBalanceData } = useBalance({
-    address,
-    chainId,
-    query: { enabled: !!address, refetchInterval: 10_000 },
-  });
-
-  const ethBalance = ethBalanceData ? Number(formatEther(ethBalanceData.value)) : undefined;
-
-  // Live gas price
-  const { data: gasPrice } = useGasPrice({
-    chainId,
-    query: { refetchInterval: 15_000 },
-  });
-
-  const estimatedGasEth =
-    gasPrice !== undefined ? Number(formatEther(gasPrice * TRANSFER_GAS_LIMIT)) : undefined;
-
-  // Add 50% buffer for safety
-  const requiredGasEth = estimatedGasEth !== undefined ? estimatedGasEth * 1.5 : undefined;
-  const hasEnoughGas =
-    ethBalance !== undefined && requiredGasEth !== undefined && ethBalance >= requiredGasEth;
-
-  useEffect(() => {
-    if (balance !== undefined && amount === "") {
-      setAmount(String(MIN_DEPOSIT_USDC));
-    }
-  }, [balance, amount]);
+    usdcAddress,
+  } = deposit;
 
   // Show success state when HL balance appears, then advance after a delay
   useEffect(() => {
@@ -82,66 +40,7 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
       const timer = setTimeout(() => onComplete(), 2500);
       return () => clearTimeout(timer);
     }
-  }, [account, step, onComplete]);
-
-  // Transfer to Bridge2 (direct ERC-20 transfer, no approve needed)
-  const {
-    writeContract: transferUsdc,
-    data: transferTxHash,
-    isPending: isTransferPending,
-    error: transferError,
-  } = useWriteContract();
-
-  const { isSuccess: isTransferConfirmed } = useWaitForTransactionReceipt({
-    hash: transferTxHash,
-  });
-
-  // Handle transfer error — reset to idle
-  useEffect(() => {
-    if (transferError && step === "transferring") {
-      setStep("idle");
-      setTxError(transferError.message);
-    }
-  }, [transferError, step]);
-
-  // Transfer confirmed → waiting for HL credit
-  useEffect(() => {
-    if (isTransferConfirmed && step === "transferring") {
-      setStep("waiting");
-      setTxError(null);
-      refetchBalance();
-    }
-  }, [isTransferConfirmed, step, refetchBalance]);
-
-  const handleDeposit = () => {
-    setTxError(null);
-    let parsedAmount: bigint;
-    try {
-      parsedAmount = parseUnits(amount, 6);
-    } catch {
-      setTxError("Invalid amount");
-      return;
-    }
-    setStep("transferring");
-    transferUsdc({
-      address: usdcAddress,
-      abi: erc20Abi,
-      functionName: "transfer",
-      args: [bridgeAddress, parsedAmount],
-      chainId,
-    });
-  };
-
-  const parsedAmount = amount ? Number(amount) : 0;
-  const isValidAmount = parsedAmount >= MIN_DEPOSIT_USDC && parsedAmount <= (balance ?? 0);
-
-  // Format gas estimate for display
-  const gasDisplay =
-    estimatedGasEth !== undefined
-      ? estimatedGasEth < 0.0001
-        ? "<0.0001 ETH"
-        : `~${estimatedGasEth.toFixed(4)} ETH`
-      : null;
+  }, [account, step, onComplete, setStep]);
 
   return (
     <div className="space-y-4">
@@ -252,9 +151,7 @@ function DepositForm({
         />
         {amount && !isValidAmount && (
           <p className="text-xs text-hl-red mt-1">
-            {parsedAmount < MIN_DEPOSIT_USDC
-              ? `Minimum ${MIN_DEPOSIT_USDC} USDC`
-              : "Exceeds balance"}
+            {parsedAmount < 1 ? "Minimum 1 USDC" : "Exceeds balance"}
           </p>
         )}
       </div>
