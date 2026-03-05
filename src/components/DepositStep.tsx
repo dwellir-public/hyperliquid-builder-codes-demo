@@ -71,8 +71,7 @@ export default function DepositStep({ onComplete }: DepositStepProps) {
 
   useEffect(() => {
     if (balance !== undefined && amount === "") {
-      const truncated = Math.floor(balance * 100) / 100;
-      setAmount(truncated.toFixed(2));
+      setAmount(String(MIN_DEPOSIT_USDC));
     }
   }, [balance, amount]);
 
@@ -351,40 +350,32 @@ function BalanceGuidance({
         </div>
 
         {needsGas && hasEnoughUsdc && (
-          <div className="border-t border-hl-border pt-3 space-y-2">
-            <p className="text-sm font-medium">Swap USDC → ETH (gasless)</p>
-            <p className="text-xs text-hl-muted">
-              You have USDC but no ETH for gas.{" "}
-              <a
-                href={matchaUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-hl-green hover:underline"
-              >
-                Matcha
-              </a>{" "}
-              supports gasless swaps on Arbitrum — swap a small amount of USDC for ETH without
-              needing gas to initiate the swap.
+          <a
+            href={matchaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block border border-hl-green/30 bg-hl-green/5 rounded-lg p-3 hover:bg-hl-green/10 transition-colors cursor-pointer"
+          >
+            <p className="text-sm font-medium text-hl-green">Swap USDC → ETH (gasless) ↗</p>
+            <p className="text-xs text-hl-muted mt-1">
+              Matcha supports gasless swaps on Arbitrum — swap a small amount of USDC for ETH
+              without needing gas to initiate the swap.
             </p>
-          </div>
+          </a>
         )}
 
         {needsUsdc && !needsGas && (
-          <div className="border-t border-hl-border pt-3 space-y-2">
-            <p className="text-sm font-medium">Swap ETH → USDC</p>
-            <p className="text-xs text-hl-muted">
-              You have ETH but not enough USDC. Swap on{" "}
-              <a
-                href={uniswapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-hl-green hover:underline"
-              >
-                Uniswap
-              </a>{" "}
-              to get USDC on Arbitrum.
+          <a
+            href={uniswapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block border border-hl-green/30 bg-hl-green/5 rounded-lg p-3 hover:bg-hl-green/10 transition-colors cursor-pointer"
+          >
+            <p className="text-sm font-medium text-hl-green">Swap ETH → USDC on Uniswap ↗</p>
+            <p className="text-xs text-hl-muted mt-1">
+              You have ETH but not enough USDC. Swap on Uniswap to get USDC on Arbitrum.
             </p>
-          </div>
+          </a>
         )}
 
         {needsUsdc && needsGas && (
