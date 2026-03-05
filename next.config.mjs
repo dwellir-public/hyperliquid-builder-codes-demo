@@ -1,6 +1,22 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {},
+  turbopack: {
+    root: dirname(fileURLToPath(import.meta.url)),
+    resolveAlias: {
+      // Stub out Node-only modules that wallet/crypto deps try to import in the browser
+      fs: { browser: "" },
+      net: { browser: "" },
+      tls: { browser: "" },
+      // Optional deps that aren't needed at runtime
+      "pino-pretty": { browser: "" },
+      encoding: { browser: "" },
+      "@react-native-async-storage/async-storage": { browser: "" },
+    },
+  },
+  serverExternalPackages: ["pino-pretty", "encoding"],
   async headers() {
     return [
       {
