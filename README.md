@@ -6,16 +6,17 @@ Built by [Dwellir](https://dwellir.com) as a reference implementation for teams 
 
 ## What It Does
 
-The app guides you through six steps:
+The app is a guided wizard that walks you through the full builder code lifecycle:
 
 1. **Check Approval Status** -- read-only query to see if your wallet has approved the builder address
 2. **Approve Builder Fee** -- sign an EIP-712 message to authorize a max fee rate
-3. **Activate Trading Session** -- approve a temporary agent key for order signing (see [Architecture](#architecture) below)
-4. **Place Limit Order** -- submit a GTC limit order with the builder code attached
-5. **Place Market Order** -- submit an IOC market order with the builder code attached
+3. **Deposit USDC** -- transfer USDC from Arbitrum to Hyperliquid (skipped if you already have a balance)
+4. **Activate Agent** -- approve a temporary agent key for order signing (see [Architecture](#architecture) below)
+5. **Place Order** -- submit a market or limit order with the builder code attached
 6. **Revoke Approval** -- set the max fee to 0% to remove the builder's permission
+7. **What's Next** -- links to clone the repo, sign up at Dwellir, and explore docs
 
-Each step includes a live candlestick chart, account balance, and human-readable transaction results.
+The wizard auto-skips completed steps on load. Each step includes live account balance, an L2 orderbook feed, candlestick charts, and human-readable transaction results.
 
 ## Getting Started
 

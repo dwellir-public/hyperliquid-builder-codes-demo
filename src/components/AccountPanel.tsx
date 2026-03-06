@@ -111,6 +111,7 @@ export default function AccountPanel() {
                 <span>{order.sz}</span>
                 <span className="text-hl-muted">@{parseFloat(order.limitPx).toFixed(2)}</span>
                 <button
+                  type="button"
                   onClick={() => handleCancel(order.coin, order.oid)}
                   disabled={cancellingOid === order.oid}
                   className="text-hl-red hover:text-hl-red/80 disabled:opacity-50"

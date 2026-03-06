@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import { DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
 import { queryMaxBuilderFee } from "@/lib/hyperliquid";
@@ -16,5 +16,6 @@ export function useBuilderApproval(builderAddress?: string) {
     queryFn: () => queryMaxBuilderFee(network, address!, builder),
     enabled: !!address,
     refetchInterval: network === "mainnet" ? 5_000 : 10_000,
+    placeholderData: keepPreviousData,
   });
 }

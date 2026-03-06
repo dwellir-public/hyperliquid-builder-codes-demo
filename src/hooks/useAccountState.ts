@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import { fetchClearinghouseState } from "@/lib/hyperliquid";
 import { useNetwork } from "./useNetwork";
@@ -45,5 +45,6 @@ export function useAccountState() {
     },
     enabled: !!address,
     refetchInterval: network === "mainnet" ? 1_000 : 15_000,
+    placeholderData: keepPreviousData,
   });
 }

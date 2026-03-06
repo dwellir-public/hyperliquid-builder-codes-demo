@@ -1,20 +1,23 @@
 "use client";
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useState } from "react";
 import { useAccount } from "wagmi";
 import AccountPanel from "@/components/AccountPanel";
 import ActivateAgent from "@/components/ActivateAgent";
 import ApprovalStatus from "@/components/ApprovalStatus";
 import ApproveBuilder from "@/components/ApproveBuilder";
 import BuilderIncomeBar from "@/components/BuilderIncomeBar";
+import CompletionStep from "@/components/CompletionStep";
+import DepositStep from "@/components/DepositStep";
 import Header from "@/components/Header";
-import MarketOrder from "@/components/MarketOrder";
-import PlaceOrder from "@/components/PlaceOrder";
+import PlaceOrderStep from "@/components/PlaceOrderStep";
 import RevokeApproval from "@/components/RevokeApproval";
+import WizardShell from "@/components/WizardShell";
 import { DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
+import { useAccountState } from "@/hooks/useAccountState";
 import { useAgentWallet } from "@/hooks/useAgentWallet";
 import { useBuilderApproval } from "@/hooks/useBuilderApproval";
+import { useWizard } from "@/hooks/useWizard";
 
 function ConnectHero() {
   return (
@@ -36,6 +39,7 @@ function ConnectHero() {
           <ConnectButton.Custom>
             {({ openConnectModal, mounted }) => (
               <button
+                type="button"
                 onClick={openConnectModal}
                 disabled={!mounted}
                 className="w-full px-6 py-3 text-sm font-semibold rounded-lg bg-hl-green text-white hover:brightness-95 disabled:opacity-50 transition-colors"
@@ -67,36 +71,92 @@ function ConnectHero() {
   );
 }
 
-export default function Home() {
-  const { isConnected } = useAccount();
-  const { data: maxFee } = useBuilderApproval();
+function WizardFlow() {
+  const { data: account, isLoading: isAccountLoading } = useAccountState();
+  const { data: maxFee, isLoading: isApprovalLoading } = useBuilderApproval();
   const { isAgentApproved } = useAgentWallet();
-  const [coin, setCoin] = useState("ETH");
 
-  const isBuilderApproved = maxFee != null && maxFee > 0;
-  const canTrade = isBuilderApproved && isAgentApproved;
+  if (isAccountLoading || isApprovalLoading) {
+    return (
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+        <p className="text-center text-sm text-hl-muted">Loading account state...</p>
+      </main>
+    );
+  }
+
+  const hasBalance = account ? account.balance > 0 : false;
+  const isApproved = maxFee != null && maxFee > 0;
+
+  const preCompleted: string[] = [];
+  if (isApproved) {
+    preCompleted.push("check-approval", "approve-builder");
+  }
+  if (hasBalance) {
+    preCompleted.push("deposit");
+  }
+  if (isAgentApproved) {
+    preCompleted.push("activate-agent");
+  }
+
+  const alwaysClickable = isApproved ? ["revoke", "complete"] : [];
 
   return (
-    <div className="min-h-screen flex flex-col pb-10">
-      <Header />
+    <WizardContent
+      includeDeposit={!hasBalance}
+      preCompleted={preCompleted}
+      alwaysClickable={alwaysClickable}
+    />
+  );
+}
 
-      {!isConnected ? (
-        <ConnectHero />
-      ) : (
-        <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 space-y-6">
-          <div className="text-center mb-4">
+function WizardContent({
+  includeDeposit,
+  preCompleted,
+  alwaysClickable,
+}: {
+  includeDeposit: boolean;
+  preCompleted: string[];
+  alwaysClickable: string[];
+}) {
+  const wizard = useWizard({ includeDeposit, preCompleted, alwaysClickable });
+
+  const renderStep = () => {
+    switch (wizard.currentStepId) {
+      case "deposit":
+        return <DepositStep onComplete={wizard.completeStep} />;
+      case "check-approval":
+        return <ApprovalStatus onComplete={wizard.completeStep} />;
+      case "approve-builder":
+        return <ApproveBuilder onComplete={wizard.completeStep} />;
+      case "activate-agent":
+        return <ActivateAgent onComplete={wizard.completeStep} />;
+      case "place-order":
+        return <PlaceOrderStep onComplete={wizard.completeStep} />;
+      case "revoke":
+        return <RevokeApproval onComplete={wizard.completeStep} />;
+      case "complete":
+        return <CompletionStep />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8 space-y-6">
+      <div className="lg:grid lg:grid-cols-[1fr_2fr] lg:gap-8">
+        <aside className="lg:sticky lg:top-24 lg:self-start mb-6 lg:mb-0 space-y-6">
+          <div className="text-center lg:text-left">
             <h1 className="text-2xl font-bold mb-2">Builder Codes Workflow</h1>
             <p className="text-xs text-hl-muted font-mono">Builder: {DWELLIR_BUILDER_ADDRESS}</p>
           </div>
-
           <AccountPanel />
+          <div className="hidden lg:block">
+            <CompletionStep variant="sidebar" />
+          </div>
+        </aside>
 
-          <ApprovalStatus />
-          <ApproveBuilder />
-          <ActivateAgent locked={!isBuilderApproved} />
-          <PlaceOrder coin={coin} setCoin={setCoin} locked={!canTrade} />
-          <MarketOrder coin={coin} setCoin={setCoin} locked={!canTrade} />
-          <RevokeApproval locked={!canTrade} />
+        <div className="space-y-6">
+          <WizardShell wizard={wizard}>{renderStep()}</WizardShell>
 
           <footer className="text-center text-xs text-hl-muted py-8 border-t border-hl-border">
             <p>
@@ -112,9 +172,19 @@ export default function Home() {
               — Blockchain infrastructure for builders.
             </p>
           </footer>
-        </main>
-      )}
+        </div>
+      </div>
+    </main>
+  );
+}
 
+export default function Home() {
+  const { isConnected } = useAccount();
+
+  return (
+    <div className="min-h-screen flex flex-col pb-10">
+      <Header />
+      {!isConnected ? <ConnectHero /> : <WizardFlow />}
       <BuilderIncomeBar />
     </div>
   );

@@ -27,6 +27,22 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Smoke test dev startup
+        run: |
+          LOG_FILE="$(mktemp)"
+          set +e
+          timeout 25s npm run dev >"$LOG_FILE" 2>&1
+          status=$?
+          set -e
+          if [ "$status" -eq 124 ]; then
+            echo "Dev server started successfully (timeout reached as expected)."
+            exit 0
+          fi
+          echo "Dev server exited prematurely with code $status:"
+          cat "$LOG_FILE"
+          exit 1
+        env:
+          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ci_placeholder
       - run: npm run build
         env:
           NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ci_placeholder

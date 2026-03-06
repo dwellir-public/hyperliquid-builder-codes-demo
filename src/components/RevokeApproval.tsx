@@ -6,10 +6,13 @@ import { useAccount } from "wagmi";
 import { DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
 import { useHyperliquid } from "@/hooks/useHyperliquid";
 import { useNetwork } from "@/hooks/useNetwork";
-import StepCard from "./StepCard";
 import TransactionResult from "./TransactionResult";
 
-export default function RevokeApproval({ locked }: { locked?: boolean }) {
+interface RevokeApprovalProps {
+  onComplete: () => void;
+}
+
+export default function RevokeApproval({ onComplete }: RevokeApprovalProps) {
   const { isConnected } = useAccount();
   const { walletClient } = useHyperliquid();
   const { network } = useNetwork();
@@ -33,6 +36,7 @@ export default function RevokeApproval({ locked }: { locked?: boolean }) {
       queryClient.invalidateQueries({
         queryKey: ["maxBuilderFee", network],
       });
+      onComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -41,17 +45,21 @@ export default function RevokeApproval({ locked }: { locked?: boolean }) {
   };
 
   return (
-    <StepCard
-      step={6}
-      title="Revoke Approval"
-      description="Revoke the builder's permission by setting the max fee to 0%. After this, orders with this builder code will be rejected."
-      locked={locked}
-    >
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-base font-semibold">Revoke Approval</h2>
+        <p className="text-sm text-hl-muted mt-1">
+          Revoke the builder's permission by setting the max fee to 0%. After this, orders with this
+          builder code will be rejected.
+        </p>
+      </div>
+
       {!isConnected ? (
         <p className="text-sm text-hl-muted">Connect your wallet first.</p>
       ) : (
         <div className="space-y-3">
           <button
+            type="button"
             onClick={handleRevoke}
             disabled={loading}
             className="px-4 py-2 text-sm font-medium rounded-lg border border-hl-red/50 text-hl-red hover:bg-hl-red/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -61,6 +69,6 @@ export default function RevokeApproval({ locked }: { locked?: boolean }) {
           <TransactionResult result={result} error={error} context="revoke" />
         </div>
       )}
-    </StepCard>
+    </div>
   );
 }

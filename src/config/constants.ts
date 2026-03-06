@@ -44,3 +44,16 @@ export function feeToPercent(f: number): `${string}%` {
   const pct = f / 1000;
   return `${pct.toFixed(4)}%`;
 }
+
+export const BRIDGE2_ADDRESS = {
+  mainnet: "0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7" as `0x${string}`,
+  testnet: "0x08cfc1B6b2dCF36A1480b99353A354AA8AC56f89" as `0x${string}`,
+};
+
+export const USDC_ADDRESS = {
+  mainnet: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" as `0x${string}`,
+  testnet: "0x1baAbB04529D43a73232B713C0FE471f7c7334d5" as `0x${string}`,
+};
+
+export const MIN_DEPOSIT_USDC = 10;
+export const MIN_ORDER_USDC = 10;
