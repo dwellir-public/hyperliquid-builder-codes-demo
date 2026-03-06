@@ -26,6 +26,7 @@ const POST_DEPOSIT_STEPS: WizardStep[] = [
   { id: "activate-agent", label: "Activate Agent" },
   { id: "place-order", label: "Place Order" },
   { id: "revoke", label: "Revoke Approval" },
+  { id: "complete", label: "What's Next" },
 ];
 
 function reducer(state: WizardState, action: WizardAction): WizardState {

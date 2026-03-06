@@ -22,6 +22,7 @@ export function useDeposit(hlBalance?: number) {
   const { address } = useAccount();
   const { network } = useNetwork();
   const [amount, setAmount] = useState("");
+  const [hasSetDefault, setHasSetDefault] = useState(false);
   const [step, setStep] = useState<DepositStep>("idle");
   const [txError, setTxError] = useState<string | null>(null);
 
@@ -65,13 +66,14 @@ export function useDeposit(hlBalance?: number) {
   const hasEnoughGas =
     ethBalance !== undefined && requiredGasEth !== undefined && ethBalance >= requiredGasEth;
 
-  // Default amount: top up to MIN_DEPOSIT_USDC based on existing HL balance
+  // Default amount: top up to MIN_DEPOSIT_USDC based on existing HL balance (once)
   useEffect(() => {
-    if (balance !== undefined && amount === "") {
+    if (balance !== undefined && !hasSetDefault) {
       const needed = Math.ceil(MIN_DEPOSIT_USDC - (hlBalance ?? 0));
       setAmount(String(Math.max(needed, 1)));
+      setHasSetDefault(true);
     }
-  }, [balance, amount, hlBalance]);
+  }, [balance, hasSetDefault, hlBalance]);
 
   // Transfer to Bridge2 (direct ERC-20 transfer, no approve needed)
   const {

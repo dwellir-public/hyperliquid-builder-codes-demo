@@ -7,6 +7,7 @@ import ActivateAgent from "@/components/ActivateAgent";
 import ApprovalStatus from "@/components/ApprovalStatus";
 import ApproveBuilder from "@/components/ApproveBuilder";
 import BuilderIncomeBar from "@/components/BuilderIncomeBar";
+import CompletionStep from "@/components/CompletionStep";
 import DepositStep from "@/components/DepositStep";
 import Header from "@/components/Header";
 import PlaceOrderStep from "@/components/PlaceOrderStep";
@@ -123,6 +124,8 @@ function WizardContent({
         return <PlaceOrderStep onComplete={wizard.completeStep} />;
       case "revoke":
         return <RevokeApproval onComplete={wizard.completeStep} />;
+      case "complete":
+        return <CompletionStep />;
       default:
         return null;
     }

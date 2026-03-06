@@ -90,11 +90,8 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
   const hasSetDefault = useRef(false);
   useEffect(() => {
     if (hasSetDefault.current || !account || !midPrice) return;
-    const defaultSpend = Math.min(account.balance * 0.8, 10);
-    if (defaultSpend > 0) {
-      setUsdcAmount(`${Math.floor(defaultSpend * 100) / 100}`);
-      hasSetDefault.current = true;
-    }
+    setUsdcAmount(`${MIN_ORDER_USDC}`);
+    hasSetDefault.current = true;
   }, [account, midPrice]);
 
   const iocPrice = midPrice
