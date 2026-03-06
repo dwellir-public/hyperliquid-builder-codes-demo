@@ -21,6 +21,11 @@ const PriceChart = dynamic(() => import("./PriceChart"), { ssr: false });
 
 const SLIPPAGE = 0.03;
 
+function ceilToDecimals(value: number, decimals: number): string {
+  const factor = 10 ** decimals;
+  return (Math.ceil(value * factor) / factor).toFixed(decimals);
+}
+
 interface PlaceOrderStepProps {
   onComplete: () => void;
 }
@@ -67,7 +72,7 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
   const displayCoin =
     lastEdited === "usdc"
       ? midPrice && usdcAmount && Number(usdcAmount) > 0
-        ? (Number(usdcAmount) / midPrice).toFixed(szDecimals ?? 4)
+        ? ceilToDecimals(Number(usdcAmount) / midPrice, szDecimals ?? 4)
         : ""
       : coinAmount;
   const displayUsdc =
@@ -354,6 +359,9 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
               {!exceedsBalance && belowMinOrder && (
                 <p className="text-xs text-hl-red mt-1">Minimum order value is ${MIN_ORDER_USDC}</p>
               )}
+              {needsDeposit && (
+                <InlineDeposit showDeposit={showDeposit} setShowDeposit={setShowDeposit} />
+              )}
             </div>
 
             {/* Arrow separator */}
@@ -509,9 +517,6 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
           </div>
         </>
       )}
-
-      {/* Inline deposit */}
-      {needsDeposit && <InlineDeposit showDeposit={showDeposit} setShowDeposit={setShowDeposit} />}
 
       {/* BBO display */}
       {midPrice && (
