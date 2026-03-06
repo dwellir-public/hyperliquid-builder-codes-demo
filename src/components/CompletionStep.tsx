@@ -25,29 +25,45 @@ const CARDS = [
   },
 ];
 
-export default function CompletionStep() {
+interface CompletionStepProps {
+  variant?: "step" | "sidebar";
+}
+
+export default function CompletionStep({ variant = "step" }: CompletionStepProps) {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-base font-semibold">You've completed the builder codes workflow!</h2>
-        <p className="text-sm text-hl-muted mt-1">
-          You walked through the full lifecycle: approving a builder, depositing funds, placing
-          orders with builder fees, and revoking approval. Here's what to explore next.
-        </p>
+        {variant === "step" ? (
+          <>
+            <h2 className="text-base font-semibold">
+              You've completed the builder codes workflow!
+            </h2>
+            <p className="text-sm text-hl-muted mt-1">
+              You walked through the full lifecycle: approving a builder, depositing funds, placing
+              orders with builder fees, and revoking approval. Here's what to explore next.
+            </p>
+          </>
+        ) : (
+          <h2 className="text-sm font-semibold">Resources</h2>
+        )}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className={`grid gap-3 ${variant === "step" ? "sm:grid-cols-2" : "grid-cols-1"}`}>
         {CARDS.map((card) => (
           <a
             key={card.href}
             href={card.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="block bg-hl-card border border-hl-green/30 rounded-xl p-4 space-y-2 hover:border-hl-green/60 transition-colors"
+            className={`flex flex-col rounded-xl p-4 transition-colors ${
+              variant === "sidebar"
+                ? "bg-hl-card border border-hl-border hover:border-hl-green/60"
+                : "bg-hl-card border border-hl-green/30 hover:border-hl-green/60"
+            }`}
           >
             <h3 className="text-sm font-semibold text-hl-green">{card.title}</h3>
-            <p className="text-xs text-hl-muted">{card.description}</p>
-            <span className="inline-block text-xs font-medium text-hl-green">
+            <p className="text-xs text-hl-muted mt-1">{card.description}</p>
+            <span className="inline-block text-xs font-medium text-hl-green mt-auto pt-2">
               {card.linkText} &rarr;
             </span>
           </a>

@@ -98,17 +98,27 @@ function WizardFlow() {
     preCompleted.push("activate-agent");
   }
 
-  return <WizardContent includeDeposit={!hasBalance} preCompleted={preCompleted} />;
+  const alwaysClickable = isApproved ? ["revoke", "complete"] : [];
+
+  return (
+    <WizardContent
+      includeDeposit={!hasBalance}
+      preCompleted={preCompleted}
+      alwaysClickable={alwaysClickable}
+    />
+  );
 }
 
 function WizardContent({
   includeDeposit,
   preCompleted,
+  alwaysClickable,
 }: {
   includeDeposit: boolean;
   preCompleted: string[];
+  alwaysClickable: string[];
 }) {
-  const wizard = useWizard({ includeDeposit, preCompleted });
+  const wizard = useWizard({ includeDeposit, preCompleted, alwaysClickable });
 
   const renderStep = () => {
     switch (wizard.currentStepId) {
@@ -140,6 +150,9 @@ function WizardContent({
             <p className="text-xs text-hl-muted font-mono">Builder: {DWELLIR_BUILDER_ADDRESS}</p>
           </div>
           <AccountPanel />
+          <div className="hidden lg:block">
+            <CompletionStep variant="sidebar" />
+          </div>
         </aside>
 
         <div className="space-y-6">

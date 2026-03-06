@@ -37,7 +37,7 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
   const { data: meta } = useMeta();
   const { data: account } = useAccountState();
 
-  const [tab, setTab] = useState<"market" | "limit">("market");
+  const [tab, setTab] = useState<"market" | "limit" | "close">("market");
   const [coin, setCoin] = useState("ETH");
   const [isBuy, setIsBuy] = useState(true);
   const [size, setSize] = useState("0.01");
@@ -55,6 +55,10 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
   const [cancellingOid, setCancellingOid] = useState<number | null>(null);
   const [cancelResult, setCancelResult] = useState<unknown>(null);
   const [cancelError, setCancelError] = useState<string | null>(null);
+
+  const [closingCoin, setClosingCoin] = useState<string | null>(null);
+  const [closeResult, setCloseResult] = useState<unknown>(null);
+  const [closeError, setCloseError] = useState<string | null>(null);
 
   const { data: openOrders, isLoading: ordersLoading, cancelOrder } = useOpenOrders();
 
@@ -194,6 +198,41 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
     }
   };
 
+  const handleClosePosition = async (posCoin: string, posSize: string, side: "Long" | "Short") => {
+    if (!agentWalletClient || !mids?.[posCoin]) return;
+    const posAssetIndex = meta?.universe.findIndex((a) => a.name === posCoin) ?? -1;
+    if (posAssetIndex < 0) return;
+
+    const posMid = Number.parseFloat(mids[posCoin]);
+    const closeBuy = side === "Short";
+    const closePrice = closeBuy ? posMid * (1 + SLIPPAGE) : posMid * (1 - SLIPPAGE);
+
+    setClosingCoin(posCoin);
+    setCloseResult(null);
+    setCloseError(null);
+    try {
+      const res = await agentWalletClient.order({
+        orders: [
+          {
+            a: posAssetIndex,
+            b: closeBuy,
+            p: Number.parseFloat(closePrice.toPrecision(5)).toString(),
+            s: posSize,
+            r: true,
+            t: { limit: { tif: "Ioc" } },
+          },
+        ],
+        grouping: "na",
+        builder: { b: DWELLIR_BUILDER_ADDRESS, f: DEFAULT_BUILDER_FEE },
+      });
+      setCloseResult(res);
+    } catch (err) {
+      setCloseError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setClosingCoin(null);
+    }
+  };
+
   const allCoins = meta?.universe.map((a) => a.name) ?? [];
   const filteredCoins = coinSearch
     ? allCoins.filter((c) => c.toLowerCase().includes(coinSearch.toLowerCase()))
@@ -238,6 +277,15 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
         >
           Limit
         </button>
+        <button
+          type="button"
+          onClick={() => setTab("close")}
+          className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+            tab === "close" ? "bg-hl-red text-white" : "text-hl-muted hover:text-white"
+          }`}
+        >
+          Close
+        </button>
       </div>
 
       {tab === "limit" && (
@@ -248,12 +296,12 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
         </div>
       )}
 
-      <PriceChart coin={coin} />
+      {tab !== "close" && <PriceChart coin={coin} />}
 
       {/* Market tab: swap-style layout */}
       {tab === "market" && (
         <div className="space-y-3">
-          {/* Buy / Sell toggle */}
+          {/* Long / Short toggle */}
           <div className="inline-flex rounded-lg bg-hl-bg border border-hl-border p-0.5">
             <button
               type="button"
@@ -262,7 +310,7 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
                 isBuy ? "bg-hl-green text-white" : "text-hl-muted hover:text-white"
               }`}
             >
-              Buy
+              Long
             </button>
             <button
               type="button"
@@ -271,7 +319,7 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
                 !isBuy ? "bg-hl-red text-white" : "text-hl-muted hover:text-white"
               }`}
             >
-              Sell
+              Short
             </button>
           </div>
 
@@ -351,8 +399,8 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
                 onChange={(e) => setIsBuy(e.target.value === "buy")}
                 className="bg-hl-bg border border-hl-border rounded px-2 py-1 text-sm focus:outline-none focus:border-hl-green"
               >
-                <option value="buy">Buy</option>
-                <option value="sell">Sell</option>
+                <option value="buy">Long</option>
+                <option value="sell">Short</option>
               </select>
             </div>
             <div>
@@ -389,7 +437,7 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
       )}
 
       {/* BBO display */}
-      {midPrice && (
+      {tab !== "close" && midPrice && (
         <div className="text-xs space-y-1 bg-hl-bg/50 border border-hl-border rounded-lg px-3 py-2">
           <div className="flex items-center justify-between">
             <span className="text-hl-muted">Dwellir L2 Orderbook</span>
@@ -414,7 +462,7 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
       )}
 
       {/* Order button */}
-      {tab === "limit" ? (
+      {tab === "close" ? null : tab === "limit" ? (
         <button
           type="button"
           onClick={handleLimitOrder}
@@ -430,13 +478,13 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
           disabled={loading || assetIndex < 0 || !displayCoin || exceedsBalance || belowMinOrder}
           className="px-4 py-2 text-sm font-medium rounded-lg bg-hl-red/80 text-white hover:bg-hl-red disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Place Market {isBuy ? "Buy" : "Sell"}
+          Place Market {isBuy ? "Long" : "Short"}
         </button>
       ) : (
         <div className="bg-hl-red/5 border border-hl-red/30 rounded-lg p-3 space-y-2">
           <p className="text-sm font-medium text-white">Confirm Market Order</p>
           <p className="text-xs text-hl-muted">
-            {isBuy ? "Buy" : "Sell"} ~{displayCoin} {coin} for ${displayUsdc} USDC
+            {isBuy ? "Long" : "Short"} ~{displayCoin} {coin} for ${displayUsdc} USDC
             <br />
             (3% slippage, IOC order)
           </p>
@@ -467,7 +515,73 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
         </p>
       )}
 
-      <TransactionResult result={result} error={error} context="order" />
+      {tab !== "close" && <TransactionResult result={result} error={error} context="order" />}
+
+      {/* Close positions tab */}
+      {tab === "close" && (
+        <div>
+          {!account ? (
+            <p className="text-sm text-hl-muted">Loading...</p>
+          ) : account.positions.length === 0 ? (
+            <p className="text-sm text-hl-muted">No open positions to close.</p>
+          ) : (
+            <div className="border border-hl-border rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-hl-bg text-hl-muted text-xs">
+                    <th className="text-left px-3 py-2">Coin</th>
+                    <th className="text-left px-3 py-2">Side</th>
+                    <th className="text-right px-3 py-2">Size</th>
+                    <th className="text-right px-3 py-2">Entry</th>
+                    <th className="text-right px-3 py-2">PnL</th>
+                    <th className="text-right px-3 py-2">{""}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {account.positions.map((pos) => {
+                    const pnl = Number.parseFloat(pos.unrealizedPnl);
+                    return (
+                      <tr key={pos.coin} className="border-t border-hl-border hover:bg-hl-card/50">
+                        <td className="px-3 py-2 font-medium">{pos.coin}</td>
+                        <td
+                          className={`px-3 py-2 ${pos.side === "Long" ? "text-hl-green" : "text-hl-red"}`}
+                        >
+                          {pos.side}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono">{pos.size}</td>
+                        <td className="px-3 py-2 text-right font-mono">
+                          $
+                          {Number.parseFloat(pos.entryPx).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </td>
+                        <td
+                          className={`px-3 py-2 text-right font-mono ${pnl >= 0 ? "text-hl-green" : "text-hl-red"}`}
+                        >
+                          {pnl >= 0 ? "+" : ""}
+                          {pnl.toFixed(2)}
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleClosePosition(pos.coin, pos.size, pos.side)}
+                            disabled={closingCoin === pos.coin}
+                            className="px-2 py-1 text-xs font-medium rounded border border-hl-red/50 text-hl-red hover:bg-hl-red/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {closingCoin === pos.coin ? "Closing..." : "Close"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <TransactionResult result={closeResult} error={closeError} context="order" />
+        </div>
+      )}
 
       {/* Open Orders */}
       <div className="border-t border-hl-border pt-3 mt-4">

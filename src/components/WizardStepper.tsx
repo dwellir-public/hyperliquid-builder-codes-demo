@@ -7,15 +7,17 @@ interface WizardStepperProps {
 }
 
 export default function WizardStepper({ wizard }: WizardStepperProps) {
-  const { steps, currentStep, completedSteps, goToStep } = wizard;
+  const { steps, currentStep, completedSteps, alwaysClickable, progressStep, goToStep } = wizard;
 
   return (
     <nav aria-label="Wizard progress" className="flex items-start justify-center gap-0">
       {steps.map((step, i) => {
         const isCompleted = completedSteps.has(step.id);
         const isCurrent = i === currentStep;
-        const isFuture = !isCompleted && !isCurrent;
-        const isClickable = isCompleted || isCurrent;
+        const isReachable = i <= progressStep;
+        const isAlwaysClickable = alwaysClickable.has(step.id);
+        const isFuture = !isCompleted && !isCurrent && !isReachable && !isAlwaysClickable;
+        const isClickable = isCompleted || isCurrent || isReachable || isAlwaysClickable;
 
         return (
           <div key={step.id} className="flex items-start">

@@ -10,7 +10,10 @@ export interface WizardStep {
 interface WizardState {
   steps: WizardStep[];
   currentStep: number;
+  /** The furthest step reached through natural progression */
+  progressStep: number;
   completedSteps: Set<string>;
+  alwaysClickable: Set<string>;
 }
 
 type WizardAction = { type: "COMPLETE_STEP" } | { type: "GO_TO_STEP"; index: number };
@@ -37,12 +40,22 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
       const completedSteps = new Set(state.completedSteps);
       completedSteps.add(currentId);
       const nextStep = Math.min(state.currentStep + 1, state.steps.length - 1);
-      return { ...state, completedSteps, currentStep: nextStep };
+      return {
+        ...state,
+        completedSteps,
+        currentStep: nextStep,
+        progressStep: Math.max(state.progressStep, nextStep),
+      };
     }
     case "GO_TO_STEP": {
       const targetId = state.steps[action.index]?.id;
       if (!targetId) return state;
-      if (!state.completedSteps.has(targetId) && action.index !== state.currentStep) return state;
+      const isAllowed =
+        state.completedSteps.has(targetId) ||
+        action.index === state.currentStep ||
+        action.index <= state.progressStep ||
+        state.alwaysClickable.has(targetId);
+      if (!isAllowed) return state;
       return { ...state, currentStep: action.index };
     }
   }
@@ -51,6 +64,7 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
 interface WizardOptions {
   includeDeposit: boolean;
   preCompleted?: string[];
+  alwaysClickable?: string[];
 }
 
 function init(options: WizardOptions): WizardState {
@@ -70,7 +84,9 @@ function init(options: WizardOptions): WizardState {
     currentStep = steps.length - 1;
   }
 
-  return { steps, currentStep, completedSteps };
+  const alwaysClickable = new Set<string>(options.alwaysClickable ?? []);
+
+  return { steps, currentStep, progressStep: currentStep, completedSteps, alwaysClickable };
 }
 
 export function useWizard(options: WizardOptions) {
@@ -79,8 +95,10 @@ export function useWizard(options: WizardOptions) {
   return {
     steps: state.steps,
     currentStep: state.currentStep,
+    progressStep: state.progressStep,
     currentStepId: state.steps[state.currentStep]?.id ?? "",
     completedSteps: state.completedSteps,
+    alwaysClickable: state.alwaysClickable,
     completeStep: () => dispatch({ type: "COMPLETE_STEP" }),
     goToStep: (index: number) => dispatch({ type: "GO_TO_STEP", index }),
   };
