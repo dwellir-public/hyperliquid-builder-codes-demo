@@ -10,7 +10,7 @@ export default function WizardStepper({ wizard }: WizardStepperProps) {
   const { steps, currentStep, completedSteps, goToStep } = wizard;
 
   return (
-    <nav aria-label="Wizard progress" className="flex items-center justify-center gap-0">
+    <nav aria-label="Wizard progress" className="flex items-start justify-center gap-0">
       {steps.map((step, i) => {
         const isCompleted = completedSteps.has(step.id);
         const isCurrent = i === currentStep;
@@ -18,10 +18,10 @@ export default function WizardStepper({ wizard }: WizardStepperProps) {
         const isClickable = isCompleted || isCurrent;
 
         return (
-          <div key={step.id} className="flex items-center">
+          <div key={step.id} className="flex items-start">
             {i > 0 && (
               <div
-                className={`w-8 sm:w-12 h-0.5 ${isCompleted || isCurrent ? "bg-hl-green" : "bg-hl-border"}`}
+                className={`w-8 sm:w-12 h-0.5 mt-4 ${isCompleted || isCurrent ? "bg-hl-green" : "bg-hl-border"}`}
               />
             )}
             <button

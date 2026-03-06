@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { DEFAULT_BUILDER_FEE, DWELLIR_BUILDER_ADDRESS } from "@/config/constants";
 import { useAccountState } from "@/hooks/useAccountState";
+import { useAgentWallet } from "@/hooks/useAgentWallet";
 import { useBuilderApproval } from "@/hooks/useBuilderApproval";
+import { useAllMids, useMeta } from "@/hooks/useMarketData";
 import { useOpenOrders } from "@/hooks/useOpenOrders";
+import TransactionResult from "./TransactionResult";
 
 function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse bg-hl-border/50 rounded ${className}`} />;
@@ -13,7 +17,15 @@ export default function AccountPanel() {
   const { data: account, isLoading: accountLoading } = useAccountState();
   const { data: orders, isLoading: ordersLoading, cancelOrder } = useOpenOrders();
   const { data: maxFee } = useBuilderApproval();
+  const { agentWalletClient } = useAgentWallet();
+  const { data: mids } = useAllMids();
+  const { data: meta } = useMeta();
   const [cancellingOid, setCancellingOid] = useState<number | null>(null);
+  const [closingCoin, setClosingCoin] = useState<string | null>(null);
+  const [closeResult, setCloseResult] = useState<unknown>(null);
+  const [closeError, setCloseError] = useState<string | null>(null);
+
+  const SLIPPAGE = 0.03;
 
   const handleCancel = async (coin: string, oid: number) => {
     setCancellingOid(oid);
@@ -23,6 +35,41 @@ export default function AccountPanel() {
       // Error handling via UI feedback
     } finally {
       setCancellingOid(null);
+    }
+  };
+
+  const handleClosePosition = async (posCoin: string, posSize: string, side: "Long" | "Short") => {
+    if (!agentWalletClient || !mids?.[posCoin]) return;
+    const posAssetIndex = meta?.universe.findIndex((a) => a.name === posCoin) ?? -1;
+    if (posAssetIndex < 0) return;
+
+    const posMid = Number.parseFloat(mids[posCoin]);
+    const closeBuy = side === "Short";
+    const closePrice = closeBuy ? posMid * (1 + SLIPPAGE) : posMid * (1 - SLIPPAGE);
+
+    setClosingCoin(posCoin);
+    setCloseResult(null);
+    setCloseError(null);
+    try {
+      const res = await agentWalletClient.order({
+        orders: [
+          {
+            a: posAssetIndex,
+            b: closeBuy,
+            p: Number.parseFloat(closePrice.toPrecision(5)).toString(),
+            s: posSize,
+            r: true,
+            t: { limit: { tif: "Ioc" } },
+          },
+        ],
+        grouping: "na",
+        builder: { b: DWELLIR_BUILDER_ADDRESS, f: DEFAULT_BUILDER_FEE },
+      });
+      setCloseResult(res);
+    } catch (err) {
+      setCloseError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setClosingCoin(null);
     }
   };
 
@@ -68,47 +115,61 @@ export default function AccountPanel() {
       {/* Positions */}
       {account && account.positions.length > 0 && (
         <div>
-          <div className="flex items-center gap-1.5 mb-2">
-            <p className="text-xs text-hl-muted">Open Positions</p>
-            <span className="group relative">
-              <svg
-                className="w-3.5 h-3.5 text-hl-muted/50 cursor-help"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4m0-4h.01" />
-              </svg>
-              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 px-2.5 py-1.5 text-xs text-white bg-hl-bg border border-hl-border rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
-                These are perpetual futures positions created by filled orders. To close a position,
-                place an opposite order (e.g. sell to close a long) on the Place Order step.
-              </span>
-            </span>
+          <p className="text-xs text-hl-muted mb-2">Open Positions</p>
+          <div className="border border-hl-border rounded-lg overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-hl-bg text-hl-muted">
+                  <th className="text-left px-2 py-1.5">Coin</th>
+                  <th className="text-left px-2 py-1.5">Side</th>
+                  <th className="text-right px-2 py-1.5">Size</th>
+                  <th className="text-right px-2 py-1.5">Entry</th>
+                  <th className="text-right px-2 py-1.5">PnL</th>
+                  <th className="text-right px-2 py-1.5">{""}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {account.positions.map((pos) => {
+                  const pnl = Number.parseFloat(pos.unrealizedPnl);
+                  return (
+                    <tr key={pos.coin} className="border-t border-hl-border">
+                      <td className="px-2 py-1.5 font-medium font-mono">{pos.coin}</td>
+                      <td
+                        className={`px-2 py-1.5 ${pos.side === "Long" ? "text-hl-green" : "text-hl-red"}`}
+                      >
+                        {pos.side}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-mono">{pos.size}</td>
+                      <td className="px-2 py-1.5 text-right font-mono">
+                        $
+                        {Number.parseFloat(pos.entryPx).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </td>
+                      <td
+                        className={`px-2 py-1.5 text-right font-mono ${pnl >= 0 ? "text-hl-green" : "text-hl-red"}`}
+                      >
+                        {pnl >= 0 ? "+" : ""}
+                        {pnl.toFixed(2)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleClosePosition(pos.coin, pos.size, pos.side)}
+                          disabled={closingCoin === pos.coin || !agentWalletClient}
+                          className="px-1.5 py-0.5 text-xs font-medium rounded border border-hl-red/50 text-hl-red hover:bg-hl-red/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {closingCoin === pos.coin ? "..." : "Close"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          <div className="space-y-1">
-            {account.positions.map((pos) => {
-              const pnl = parseFloat(pos.unrealizedPnl);
-              return (
-                <div
-                  key={pos.coin}
-                  className="flex items-center justify-between text-xs font-mono bg-hl-bg rounded px-3 py-1.5"
-                >
-                  <span className="font-medium">{pos.coin}</span>
-                  <span className={pos.side === "Long" ? "text-hl-green" : "text-hl-red"}>
-                    {pos.side}
-                  </span>
-                  <span>{pos.size}</span>
-                  <span className="text-hl-muted">@{parseFloat(pos.entryPx).toFixed(2)}</span>
-                  <span className={pnl >= 0 ? "text-hl-green" : "text-hl-red"}>
-                    {pnl >= 0 ? "+" : ""}
-                    {pnl.toFixed(2)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          <TransactionResult result={closeResult} error={closeError} context="order" />
         </div>
       )}
 

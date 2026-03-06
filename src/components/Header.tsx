@@ -4,7 +4,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function Header() {
   return (
-    <header className="flex items-center justify-between px-6 py-4 border-b border-hl-border">
+    <header className="sticky top-0 z-[8888] flex items-center justify-between px-6 py-4 border-b border-hl-border bg-hl-bg/80 backdrop-blur-lg">
       <div className="flex items-center gap-3">
         <h1 className="text-lg font-bold tracking-tight font-heading">Hyperliquid Builder Codes</h1>
         <span className="text-xs text-hl-muted bg-hl-card px-2 py-0.5 rounded">Demo</span>

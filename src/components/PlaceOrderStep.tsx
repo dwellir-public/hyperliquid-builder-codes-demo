@@ -56,10 +56,6 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
   const [cancelResult, setCancelResult] = useState<unknown>(null);
   const [cancelError, setCancelError] = useState<string | null>(null);
 
-  const [closingCoin, setClosingCoin] = useState<string | null>(null);
-  const [closeResult, setCloseResult] = useState<unknown>(null);
-  const [closeError, setCloseError] = useState<string | null>(null);
-
   const { data: openOrders, isLoading: ordersLoading, cancelOrder } = useOpenOrders();
 
   const bbo = useBBO(coin);
@@ -198,41 +194,6 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
     }
   };
 
-  const handleClosePosition = async (posCoin: string, posSize: string, side: "Long" | "Short") => {
-    if (!agentWalletClient || !mids?.[posCoin]) return;
-    const posAssetIndex = meta?.universe.findIndex((a) => a.name === posCoin) ?? -1;
-    if (posAssetIndex < 0) return;
-
-    const posMid = Number.parseFloat(mids[posCoin]);
-    const closeBuy = side === "Short";
-    const closePrice = closeBuy ? posMid * (1 + SLIPPAGE) : posMid * (1 - SLIPPAGE);
-
-    setClosingCoin(posCoin);
-    setCloseResult(null);
-    setCloseError(null);
-    try {
-      const res = await agentWalletClient.order({
-        orders: [
-          {
-            a: posAssetIndex,
-            b: closeBuy,
-            p: Number.parseFloat(closePrice.toPrecision(5)).toString(),
-            s: posSize,
-            r: true,
-            t: { limit: { tif: "Ioc" } },
-          },
-        ],
-        grouping: "na",
-        builder: { b: DWELLIR_BUILDER_ADDRESS, f: DEFAULT_BUILDER_FEE },
-      });
-      setCloseResult(res);
-    } catch (err) {
-      setCloseError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setClosingCoin(null);
-    }
-  };
-
   const allCoins = meta?.universe.map((a) => a.name) ?? [];
   const filteredCoins = coinSearch
     ? allCoins.filter((c) => c.toLowerCase().includes(coinSearch.toLowerCase()))
@@ -314,118 +275,30 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
             </button>
           </div>
 
-          <div className="bg-hl-bg border border-hl-border rounded-lg p-3 space-y-3">
-            {/* You pay */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs text-hl-muted">You pay</span>
-                {account && (
-                  <span className="text-xs text-hl-muted">
-                    Balance: {account.balance.toFixed(2)} USDC
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  id="order-usdc"
-                  type="text"
-                  inputMode="decimal"
-                  value={lastEdited === "usdc" ? usdcAmount : displayUsdc}
-                  onChange={(e) => {
-                    setUsdcAmount(e.target.value);
-                    setLastEdited("usdc");
-                  }}
-                  onFocus={() => {
-                    if (lastEdited === "coin") {
-                      setUsdcAmount(displayUsdc);
-                      setLastEdited("usdc");
-                    }
-                  }}
-                  placeholder="0.00"
-                  className={`flex-1 bg-hl-card border rounded px-3 py-2 text-sm font-mono focus:outline-none ${
-                    exceedsBalance
-                      ? "border-hl-red focus:border-hl-red"
-                      : "border-hl-border focus:border-hl-green"
-                  }`}
-                />
-                <span className="text-sm font-medium text-hl-muted px-2 py-2 bg-hl-card border border-hl-border rounded w-[80px] text-center">
-                  USDC
-                </span>
-              </div>
-              {exceedsBalance && <p className="text-xs text-hl-red mt-1">Exceeds balance</p>}
-              {!exceedsBalance && belowMinOrder && (
-                <p className="text-xs text-hl-red mt-1">Minimum order value is ${MIN_ORDER_USDC}</p>
-              )}
-              {needsDeposit && (
-                <InlineDeposit showDeposit={showDeposit} setShowDeposit={setShowDeposit} />
-              )}
-            </div>
-
-            {/* Arrow separator */}
-            <div className="flex justify-center">
-              <svg
-                className="w-5 h-5 text-hl-muted"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m0 0l-4-4m4 4l4-4" />
-              </svg>
-            </div>
-
-            {/* You receive */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs text-hl-muted">You receive (est.)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={lastEdited === "coin" ? coinAmount : displayCoin}
-                  onChange={(e) => {
-                    setCoinAmount(e.target.value);
-                    setLastEdited("coin");
-                  }}
-                  onFocus={() => {
-                    if (lastEdited === "usdc") {
-                      setCoinAmount(displayCoin);
-                      setLastEdited("coin");
-                    }
-                  }}
-                  placeholder="0.0000"
-                  className="flex-1 bg-hl-card border border-hl-border rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-hl-green"
-                />
-                <div className="relative">
-                  <input
-                    id="order-coin"
-                    type="text"
-                    value={coinSearch || coin}
-                    onChange={(e) => {
-                      setCoinSearch(e.target.value);
-                      const match = allCoins.find(
-                        (c) => c.toLowerCase() === e.target.value.toLowerCase(),
-                      );
-                      if (match) {
-                        setCoin(match);
-                        setCoinSearch("");
-                      }
-                    }}
-                    onFocus={() => setCoinSearch("")}
-                    onBlur={() => setTimeout(() => setCoinSearch(""), 150)}
-                    list="coin-list-order"
-                    className="w-[80px] text-sm font-medium text-center px-2 py-2 bg-hl-card border border-hl-border rounded focus:outline-none focus:border-hl-green"
-                  />
-                  <datalist id="coin-list-order">
-                    {filteredCoins.slice(0, 50).map((c) => (
-                      <option key={c} value={c} />
-                    ))}
-                  </datalist>
-                </div>
-              </div>
-            </div>
-          </div>
+          <SwapCard
+            isBuy={isBuy}
+            account={account}
+            coinPositionSize={account?.positions.find((p) => p.coin === coin)?.size}
+            usdcAmount={usdcAmount}
+            setUsdcAmount={setUsdcAmount}
+            coinAmount={coinAmount}
+            setCoinAmount={setCoinAmount}
+            lastEdited={lastEdited}
+            setLastEdited={setLastEdited}
+            displayUsdc={displayUsdc}
+            displayCoin={displayCoin}
+            exceedsBalance={exceedsBalance}
+            belowMinOrder={belowMinOrder}
+            needsDeposit={needsDeposit}
+            showDeposit={showDeposit}
+            setShowDeposit={setShowDeposit}
+            coin={coin}
+            setCoin={setCoin}
+            coinSearch={coinSearch}
+            setCoinSearch={setCoinSearch}
+            allCoins={allCoins}
+            filteredCoins={filteredCoins}
+          />
         </div>
       )}
 
@@ -596,71 +469,6 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
 
       <TransactionResult result={result} error={error} context="order" />
 
-      {/* Positions */}
-      <div className="border-t border-hl-border pt-3 mt-4">
-        <h4 className="text-xs font-medium text-hl-muted mb-2">Positions</h4>
-        {!account ? (
-          <p className="text-xs text-hl-muted">Loading...</p>
-        ) : account.positions.length === 0 ? (
-          <p className="text-xs text-hl-muted">No open positions.</p>
-        ) : (
-          <div className="border border-hl-border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-hl-bg text-hl-muted text-xs">
-                  <th className="text-left px-3 py-2">Coin</th>
-                  <th className="text-left px-3 py-2">Side</th>
-                  <th className="text-right px-3 py-2">Size</th>
-                  <th className="text-right px-3 py-2">Entry</th>
-                  <th className="text-right px-3 py-2">PnL</th>
-                  <th className="text-right px-3 py-2">{""}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {account.positions.map((pos) => {
-                  const pnl = Number.parseFloat(pos.unrealizedPnl);
-                  return (
-                    <tr key={pos.coin} className="border-t border-hl-border hover:bg-hl-card/50">
-                      <td className="px-3 py-2 font-medium">{pos.coin}</td>
-                      <td
-                        className={`px-3 py-2 ${pos.side === "Long" ? "text-hl-green" : "text-hl-red"}`}
-                      >
-                        {pos.side}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono">{pos.size}</td>
-                      <td className="px-3 py-2 text-right font-mono">
-                        $
-                        {Number.parseFloat(pos.entryPx).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </td>
-                      <td
-                        className={`px-3 py-2 text-right font-mono ${pnl >= 0 ? "text-hl-green" : "text-hl-red"}`}
-                      >
-                        {pnl >= 0 ? "+" : ""}
-                        {pnl.toFixed(2)}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleClosePosition(pos.coin, pos.size, pos.side)}
-                          disabled={closingCoin === pos.coin}
-                          className="px-2 py-1 text-xs font-medium rounded border border-hl-red/50 text-hl-red hover:bg-hl-red/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          {closingCoin === pos.coin ? "Closing..." : "Close"}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-        <TransactionResult result={closeResult} error={closeError} context="order" />
-      </div>
-
       {/* Open Orders */}
       <div className="border-t border-hl-border pt-3 mt-4">
         <h4 className="text-xs font-medium text-hl-muted mb-2">Open Orders</h4>
@@ -711,6 +519,206 @@ export default function PlaceOrderStep({ onComplete }: PlaceOrderStepProps) {
         )}
         <TransactionResult result={cancelResult} error={cancelError} context="cancel" />
       </div>
+    </div>
+  );
+}
+
+function SwapCard({
+  isBuy,
+  account,
+  coinPositionSize,
+  usdcAmount,
+  setUsdcAmount,
+  coinAmount,
+  setCoinAmount,
+  lastEdited,
+  setLastEdited,
+  displayUsdc,
+  displayCoin,
+  exceedsBalance,
+  belowMinOrder,
+  needsDeposit,
+  showDeposit,
+  setShowDeposit,
+  coin,
+  setCoin,
+  coinSearch,
+  setCoinSearch,
+  allCoins,
+  filteredCoins,
+}: {
+  isBuy: boolean;
+  account: { balance: number; positions: { coin: string; size: string }[] } | undefined;
+  coinPositionSize: string | undefined;
+  usdcAmount: string;
+  setUsdcAmount: (v: string) => void;
+  coinAmount: string;
+  setCoinAmount: (v: string) => void;
+  lastEdited: "usdc" | "coin";
+  setLastEdited: (v: "usdc" | "coin") => void;
+  displayUsdc: string;
+  displayCoin: string;
+  exceedsBalance: boolean;
+  belowMinOrder: boolean;
+  needsDeposit: boolean;
+  showDeposit: boolean;
+  setShowDeposit: (v: boolean) => void;
+  coin: string;
+  setCoin: (v: string) => void;
+  coinSearch: string;
+  setCoinSearch: (v: string) => void;
+  allCoins: string[];
+  filteredCoins: string[];
+}) {
+  const usdcInput = (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs text-hl-muted">{isBuy ? "You pay" : "You receive (est.)"}</span>
+        {account && (
+          <span className="text-xs text-hl-muted">Balance: {account.balance.toFixed(2)} USDC</span>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <div
+          className={`flex-1 flex items-center bg-hl-card border rounded px-3 py-2 ${
+            exceedsBalance && isBuy
+              ? "border-hl-red focus-within:border-hl-red"
+              : "border-hl-border focus-within:border-hl-green"
+          }`}
+        >
+          <input
+            id="order-usdc"
+            type="text"
+            inputMode="decimal"
+            value={lastEdited === "usdc" ? usdcAmount : displayUsdc}
+            onChange={(e) => {
+              setUsdcAmount(e.target.value);
+              setLastEdited("usdc");
+            }}
+            onFocus={() => {
+              if (lastEdited === "coin") {
+                setUsdcAmount(displayUsdc);
+                setLastEdited("usdc");
+              }
+            }}
+            placeholder="0.00"
+            className="flex-1 min-w-0 bg-inherit text-sm font-mono focus:outline-none"
+          />
+          {isBuy && account && (
+            <button
+              type="button"
+              onClick={() => {
+                setUsdcAmount(account.balance.toFixed(2));
+                setLastEdited("usdc");
+              }}
+              className="ml-2 shrink-0 px-2 py-0.5 text-xs font-medium rounded border border-hl-border text-hl-muted hover:text-hl-green hover:border-hl-green/50 hover:bg-hl-green/10 transition-colors"
+            >
+              Max
+            </button>
+          )}
+        </div>
+        <span className="text-sm font-medium text-hl-muted px-2 py-2 bg-hl-card border border-hl-border rounded w-[80px] text-center">
+          USDC
+        </span>
+      </div>
+      {isBuy && exceedsBalance && <p className="text-xs text-hl-red mt-1">Exceeds balance</p>}
+      {!exceedsBalance && belowMinOrder && (
+        <p className="text-xs text-hl-red mt-1">Minimum order value is ${MIN_ORDER_USDC}</p>
+      )}
+      {isBuy && needsDeposit && (
+        <InlineDeposit showDeposit={showDeposit} setShowDeposit={setShowDeposit} />
+      )}
+    </div>
+  );
+
+  const coinInput = (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs text-hl-muted">{isBuy ? "You receive (est.)" : "You pay"}</span>
+        {!isBuy && coinPositionSize && (
+          <span className="text-xs text-hl-muted">
+            Position: {coinPositionSize} {coin}
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="flex-1 flex items-center bg-hl-card border border-hl-border rounded px-3 py-2 focus-within:border-hl-green">
+          <input
+            type="text"
+            inputMode="decimal"
+            value={lastEdited === "coin" ? coinAmount : displayCoin}
+            onChange={(e) => {
+              setCoinAmount(e.target.value);
+              setLastEdited("coin");
+            }}
+            onFocus={() => {
+              if (lastEdited === "usdc") {
+                setCoinAmount(displayCoin);
+                setLastEdited("coin");
+              }
+            }}
+            placeholder="0.0000"
+            className="flex-1 min-w-0 bg-inherit text-sm font-mono focus:outline-none"
+          />
+          {!isBuy && coinPositionSize && (
+            <button
+              type="button"
+              onClick={() => {
+                setCoinAmount(coinPositionSize);
+                setLastEdited("coin");
+              }}
+              className="ml-2 shrink-0 px-2 py-0.5 text-xs font-medium rounded border border-hl-border text-hl-muted hover:text-hl-green hover:border-hl-green/50 hover:bg-hl-green/10 transition-colors"
+            >
+              Max
+            </button>
+          )}
+        </div>
+        <div className="relative">
+          <input
+            id="order-coin"
+            type="text"
+            value={coinSearch || coin}
+            onChange={(e) => {
+              setCoinSearch(e.target.value);
+              const match = allCoins.find((c) => c.toLowerCase() === e.target.value.toLowerCase());
+              if (match) {
+                setCoin(match);
+                setCoinSearch("");
+              }
+            }}
+            onFocus={() => setCoinSearch("")}
+            onBlur={() => setTimeout(() => setCoinSearch(""), 150)}
+            list="coin-list-order"
+            className="w-[80px] text-sm font-medium text-center px-2 py-2 bg-hl-card border border-hl-border rounded focus:outline-none focus:border-hl-green"
+          />
+          <datalist id="coin-list-order">
+            {filteredCoins.slice(0, 50).map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="bg-hl-bg border border-hl-border rounded-lg p-3 space-y-3">
+      {isBuy ? usdcInput : coinInput}
+
+      {/* Arrow separator */}
+      <div className="flex justify-center">
+        <svg
+          className="w-5 h-5 text-hl-muted"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m0 0l-4-4m4 4l4-4" />
+        </svg>
+      </div>
+
+      {isBuy ? coinInput : usdcInput}
     </div>
   );
 }

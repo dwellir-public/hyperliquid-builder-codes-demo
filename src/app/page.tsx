@@ -132,30 +132,35 @@ function WizardContent({
   };
 
   return (
-    <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 space-y-6">
-      <div className="text-center mb-4">
-        <h1 className="text-2xl font-bold mb-2">Builder Codes Workflow</h1>
-        <p className="text-xs text-hl-muted font-mono">Builder: {DWELLIR_BUILDER_ADDRESS}</p>
+    <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8 space-y-6">
+      <div className="lg:grid lg:grid-cols-[1fr_2fr] lg:gap-8">
+        <aside className="lg:sticky lg:top-24 lg:self-start mb-6 lg:mb-0 space-y-6">
+          <div className="text-center lg:text-left">
+            <h1 className="text-2xl font-bold mb-2">Builder Codes Workflow</h1>
+            <p className="text-xs text-hl-muted font-mono">Builder: {DWELLIR_BUILDER_ADDRESS}</p>
+          </div>
+          <AccountPanel />
+        </aside>
+
+        <div className="space-y-6">
+          <WizardShell wizard={wizard}>{renderStep()}</WizardShell>
+
+          <footer className="text-center text-xs text-hl-muted py-8 border-t border-hl-border">
+            <p>
+              Built by{" "}
+              <a
+                href="https://dwellir.com"
+                className="text-hl-green hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Dwellir
+              </a>{" "}
+              — Blockchain infrastructure for builders.
+            </p>
+          </footer>
+        </div>
       </div>
-
-      <AccountPanel />
-
-      <WizardShell wizard={wizard}>{renderStep()}</WizardShell>
-
-      <footer className="text-center text-xs text-hl-muted py-8 border-t border-hl-border">
-        <p>
-          Built by{" "}
-          <a
-            href="https://dwellir.com"
-            className="text-hl-green hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Dwellir
-          </a>{" "}
-          — Blockchain infrastructure for builders.
-        </p>
-      </footer>
     </main>
   );
 }
