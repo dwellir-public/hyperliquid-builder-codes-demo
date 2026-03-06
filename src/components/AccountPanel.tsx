@@ -68,7 +68,25 @@ export default function AccountPanel() {
       {/* Positions */}
       {account && account.positions.length > 0 && (
         <div>
-          <p className="text-xs text-hl-muted mb-2">Open Positions</p>
+          <div className="flex items-center gap-1.5 mb-2">
+            <p className="text-xs text-hl-muted">Open Positions</p>
+            <span className="group relative">
+              <svg
+                className="w-3.5 h-3.5 text-hl-muted/50 cursor-help"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4m0-4h.01" />
+              </svg>
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 px-2.5 py-1.5 text-xs text-white bg-hl-bg border border-hl-border rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
+                These are perpetual futures positions created by filled orders. To close a position,
+                place an opposite order (e.g. sell to close a long) on the Place Order step.
+              </span>
+            </span>
+          </div>
           <div className="space-y-1">
             {account.positions.map((pos) => {
               const pnl = parseFloat(pos.unrealizedPnl);
@@ -111,6 +129,7 @@ export default function AccountPanel() {
                 <span>{order.sz}</span>
                 <span className="text-hl-muted">@{parseFloat(order.limitPx).toFixed(2)}</span>
                 <button
+                  type="button"
                   onClick={() => handleCancel(order.coin, order.oid)}
                   disabled={cancellingOid === order.oid}
                   className="text-hl-red hover:text-hl-red/80 disabled:opacity-50"
