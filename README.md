@@ -54,7 +54,18 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Start on **Testnet** to experiment without risk.
+Open [http://localhost:3000](http://localhost:3000). The app defaults to **mainnet**.
+
+#### Using Testnet
+
+To experiment without risking real funds, change the default network in `src/components/Providers.tsx`:
+
+```diff
+- const [network, setNetwork] = useState<NetworkKey>("mainnet");
++ const [network, setNetwork] = useState<NetworkKey>("testnet");
+```
+
+The codebase has full testnet support (endpoints, contract addresses, wallet chain switching), so everything works the same way — just against Hyperliquid's testnet environment.
 
 ## Architecture
 
