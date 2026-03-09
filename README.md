@@ -8,13 +8,13 @@ Built by [Dwellir](https://dwellir.com) as a reference implementation for teams 
 
 The app is a guided wizard that walks you through the full builder code lifecycle:
 
-1. **Check Approval Status** -- read-only query to see if your wallet has approved the builder address
-2. **Approve Builder Fee** -- sign an EIP-712 message to authorize a max fee rate
-3. **Deposit USDC** -- transfer USDC from Arbitrum to Hyperliquid (skipped if you already have a balance)
-4. **Activate Agent** -- approve a temporary agent key for order signing (see [Architecture](#architecture) below)
-5. **Place Order** -- submit a market or limit order with the builder code attached
-6. **Revoke Approval** -- set the max fee to 0% to remove the builder's permission
-7. **What's Next** -- links to clone the repo, sign up at Dwellir, and explore docs
+1. **Check Approval Status** -> read-only query to see if your wallet has approved the builder address
+2. **Approve Builder Fee** -> sign an EIP-712 message to authorize a max fee rate
+3. **Deposit USDC** -> transfer USDC from Arbitrum to Hyperliquid (skipped if you already have a balance)
+4. **Activate Agent** -> approve a temporary agent key for order signing (see [Architecture](#architecture) below)
+5. **Place Order** -> submit a market or limit order with the builder code attached
+6. **Revoke Approval** -> set the max fee to 0% to remove the builder's permission
+7. **What's Next** -> links to clone the repo, sign up at Dwellir, and explore docs
 
 The wizard auto-skips completed steps on load. Each step includes live account balance, an L2 orderbook feed, candlestick charts, and human-readable transaction results.
 
@@ -65,7 +65,7 @@ To experiment without risking real funds, change the default network in `src/com
 + const [network, setNetwork] = useState<NetworkKey>("testnet");
 ```
 
-The codebase has full testnet support (endpoints, contract addresses, wallet chain switching), so everything works the same way — just against Hyperliquid's testnet environment.
+The codebase has full testnet support (endpoints, contract addresses, wallet chain switching), so everything works the same way, just against Hyperliquid's testnet environment.
 
 ## Architecture
 
@@ -73,11 +73,11 @@ The codebase has full testnet support (endpoints, contract addresses, wallet cha
 
 Hyperliquid L1 actions (orders, cancels) use EIP-712 typed-data signatures with a domain `chainId` of **1337**. This does not match any real chain, and wallet providers (MetaMask, WalletConnect) reject the signature because the domain chain ID doesn't match the active chain.
 
-The official Hyperliquid app solves this with **agent keys** -- the same approach used here:
+The official Hyperliquid app solves this with **agent keys**, the same approach used here:
 
 1. The app generates a random private key in the browser and stores it in `sessionStorage`
 2. You sign an `approveAgent` transaction via your wallet (this uses chainId 42161/421614, which your wallet accepts)
-3. All subsequent orders are signed **locally in JavaScript** with the agent key -- no wallet RPC call, no chain-ID validation
+3. All subsequent orders are signed **locally in JavaScript** with the agent key. No wallet RPC call, no chain-ID validation
 
 The agent key is:
 - Scoped to your wallet address
@@ -98,11 +98,11 @@ The agent key is:
 
 ```
 src/
-  app/          -- Next.js pages and layout
-  components/   -- UI components (step cards, charts, panels)
-  hooks/        -- React hooks (agent wallet, market data, account state)
-  lib/          -- Hyperliquid API client and result parser
-  config/       -- Constants (builder address, fee defaults) and wagmi config
+  app/          -> Next.js pages and layout
+  components/   -> UI components (step cards, charts, panels)
+  hooks/        -> React hooks (agent wallet, market data, account state)
+  lib/          -> Hyperliquid API client and result parser
+  config/       -> Constants (builder address, fee defaults) and wagmi config
 ```
 
 ## Configuration
@@ -123,7 +123,7 @@ Change these to use your own builder address and fee rate.
 ## Security Notes
 
 - **Agent private keys** are generated in the browser and stored in `sessionStorage`. They are never sent to any server. They are cleared when the browser tab is closed. An XSS vulnerability could expose these keys, so this approach is appropriate for demos and tools but should be hardened (e.g. with CSP headers) for production use.
-- **No funds at risk from agent keys.** Agent wallets can only place and cancel orders -- they cannot initiate withdrawals or transfers.
+- **No funds at risk from agent keys.** Agent wallets can only place and cancel orders. They cannot initiate withdrawals or transfers.
 - **This is a demo application.** It is intended as a reference implementation, not a production trading interface. Use at your own risk.
 
 ## License
