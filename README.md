@@ -109,6 +109,14 @@ export const DEFAULT_BUILDER_FEE = 10; // 1 bps = 0.01%
 
 Change these to use your own builder address and fee rate.
 
+## Agent Skills (Hyperliquid)
+
+This repo ships with pre-installed [Agent Skills](https://agentskills.io) for Hyperliquid development via Dwellir. Any AI coding agent that supports the Agent Skills standard (Claude Code, Codex, Gemini CLI, Cursor, and [many more](https://agentskills.io)) will automatically discover and use Hyperliquid context -- endpoints, API references, trading patterns, and best practices -- when working in this repo.
+
+The skills live in `.agents/skills/hyperliquid/` (the cross-agent canonical path) with a symlink at `.claude/skills/hyperliquid` for Claude Code compatibility.
+
+Sourced from [dwellir-public/hyperliquid-skills](https://github.com/dwellir-public/hyperliquid-skills).
+
 ## Security Notes
 
 - **Agent private keys** are generated in the browser and stored in `sessionStorage`. They are never sent to any server. They are cleared when the browser tab is closed. An XSS vulnerability could expose these keys, so this approach is appropriate for demos and tools but should be hardened (e.g. with CSP headers) for production use.
